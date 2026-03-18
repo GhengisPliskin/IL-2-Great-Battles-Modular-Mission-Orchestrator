@@ -1,0 +1,69 @@
+{
+  "$comment": "Sample MMF payload: Static CAP module in group output mode. This is the target output the GUI must produce when the user configures a Static CAP and clicks Compile.",
+
+  "mmf_version": "2.0",
+  "output_mode": "group",
+
+  "compiler_options": {
+    "id_counter_start": null,
+    "initialization_delay_seconds": 3,
+    "session_duration_minutes": 180,
+    "target_mission_file": null
+  },
+
+  "mission_properties": null,
+
+  "modules": [
+    {
+      "module_id": "blue_cap_alpha",
+      "module_type": "static_cap",
+      "coalition": "axis",
+
+      "flight": {
+        "aircraft_type": "bf109g6",
+        "ai_skill": "veteran",
+        "country": "Germany",
+        "flight_size": 4,
+        "payload_id": 0,
+        "fuel": 0.75,
+        "skin": null,
+        "starting_location": "in_air",
+        "spawn_altitude": 4000
+      },
+
+      "magazine": {
+        "wave_count": 12,
+        "time_on_station_minutes": 15,
+        "gc_despawn_delay_seconds": 30
+      },
+
+      "waypoints": {
+        "loop": true,
+        "priority": "medium",
+        "points": [
+          { "x": 130500.0, "z": 85200.0, "altitude": 4000, "speed": 350, "area": 500 },
+          { "x": 135000.0, "z": 90000.0, "altitude": 4000, "speed": 350, "area": 500 },
+          { "x": 140200.0, "z": 87500.0, "altitude": 4200, "speed": 340, "area": 500 },
+          { "x": 136000.0, "z": 82000.0, "altitude": 3800, "speed": 360, "area": 500 }
+        ]
+      },
+
+      "attack": {
+        "attack_type": "air",
+        "attack_area_radius": 8000,
+        "attack_coordinates": { "x": 135000.0, "z": 86000.0, "altitude": 4000 },
+        "priority": "high"
+      },
+
+      "scramble": null,
+      "escort": null,
+
+      "proxy_coordinates": {
+        "x": 130000.0,
+        "z": 85000.0
+      },
+
+      "wiring": null
+    }
+  ]
+}

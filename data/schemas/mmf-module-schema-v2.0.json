@@ -1,0 +1,463 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mmf.il2gb.dev/schema/v2.0/mmf-module.schema.json",
+  "title": "MMF Module Schema",
+  "description": "Modular Mission Framework intermediate JSON schema. Contract between the GUI (frontend) and the MMF Compiler (backend). Version 2.0 — Post-FMEA, supports group and mission output modes.",
+  "type": "object",
+  "required": ["mmf_version", "output_mode", "modules"],
+  "additionalProperties": false,
+  "properties": {
+
+    "mmf_version": {
+      "type": "string",
+      "const": "2.0",
+      "description": "Schema version. Compiler and GUI must agree on this value."
+    },
+
+    "output_mode": {
+      "type": "string",
+      "enum": ["group", "mission"],
+      "description": "Output format. 'group' emits a .Group file per module (current). 'mission' emits a complete .Mission file via the orchestrator (future)."
+    },
+
+    "compiler_options": {
+      "type": "object",
+      "description": "Global compiler configuration. Applies to all modules in this payload.",
+      "additionalProperties": false,
+      "properties": {
+        "id_counter_start": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "default": null,
+          "description": "Starting ID for the monotonic counter. If null, compiler initializes from max(existing Index in target file) + 1. If set, overrides auto-detection. [FMEA PI-003]"
+        },
+        "initialization_delay_seconds": {
+          "type": "number",
+          "minimum": 3,
+          "maximum": 10,
+          "default": 3,
+          "description": "Master Core initialization delay in seconds. Compiler warns if > 200 deactivated entities and delay < 5s. [FMEA EC-001]"
+        },
+        "session_duration_minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 360,
+          "default": 180,
+          "description": "Planned mission session length. Used for wave_count validation: wave_count >= ceil(session_duration / avg_sortie_duration). [FMEA EL-001]"
+        },
+        "target_mission_file": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Path to existing .Mission file for ID counter initialization. If null, counter starts from id_counter_start or defaults to 1."
+        }
+      }
+    },
+
+    "mission_properties": {
+      "type": ["object", "null"],
+      "default": null,
+      "description": "Mission-level properties. Required when output_mode is 'mission'. Null for 'group' mode. Populated by the orchestrator (future).",
+      "properties": {
+        "map": {
+          "type": "string",
+          "description": "Map identifier matching the geographic database key (e.g., 'stalingrad_winter', 'kuban', 'rhineland')."
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "Mission date in YYYY-MM-DD format. Affects sunrise/sunset timing."
+        },
+        "time": {
+          "type": "string",
+          "pattern": "^[0-2][0-9]:[0-5][0-9]:[0-5][0-9]$",
+          "description": "Mission start time in HH:MM:SS format (24-hour)."
+        },
+        "weather_preset": {
+          "type": "string",
+          "description": "Weather configuration identifier from the weather presets database."
+        },
+        "wind_layers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["altitude", "direction", "speed"],
+            "properties": {
+              "altitude": { "type": "integer", "minimum": 0 },
+              "direction": { "type": "number", "minimum": 0, "maximum": 360 },
+              "speed": { "type": "number", "minimum": 0 }
+            }
+          }
+        },
+        "coalitions": {
+          "type": "object",
+          "description": "Country-to-coalition mapping.",
+          "properties": {
+            "allies": { "type": "array", "items": { "type": "string" } },
+            "axis": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "player_spawns": {
+          "type": "array",
+          "description": "Player airfield/spawn configurations. Orchestrator populates from geographic database.",
+          "items": {
+            "type": "object",
+            "required": ["airfield_id", "coalition", "plane_set"],
+            "properties": {
+              "airfield_id": { "type": "string", "description": "Airfield identifier from the geographic database." },
+              "coalition": { "type": "string", "enum": ["allies", "axis"] },
+              "plane_set": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "List of aircraft type identifiers available at this spawn."
+              }
+            }
+          }
+        },
+        "briefing": {
+          "type": "object",
+          "properties": {
+            "allies_text": { "type": "string" },
+            "axis_text": { "type": "string" }
+          }
+        }
+      }
+    },
+
+    "modules": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Array of module definitions. In 'group' mode, typically one module. In 'mission' mode, the orchestrator populates multiple modules.",
+      "items": {
+        "$ref": "#/definitions/module"
+      }
+    }
+  },
+
+  "definitions": {
+
+    "module": {
+      "type": "object",
+      "required": ["module_id", "module_type", "coalition", "flight", "magazine", "proxy_coordinates"],
+      "additionalProperties": false,
+      "description": "A single MMF module definition. Each module compiles to one .Group block.",
+      "properties": {
+
+        "module_id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_-]+$",
+          "description": "Unique identifier for this module within the payload. Used for cross-module [OUT]->[IN] wiring."
+        },
+
+        "module_type": {
+          "type": "string",
+          "enum": [
+            "static_cap",
+            "intercept",
+            "scramble",
+            "ground_attack",
+            "bomber_escort",
+            "logistics_convoy",
+            "ambient_patrol"
+          ],
+          "description": "Module type. Determines which compiler primitives are composed and which GUI form is displayed."
+        },
+
+        "coalition": {
+          "type": "string",
+          "enum": ["allies", "axis"],
+          "description": "Which side this module's AI units belong to."
+        },
+
+        "flight": {
+          "$ref": "#/definitions/flight_config",
+          "description": "Aircraft configuration for this module's AI flights."
+        },
+
+        "magazine": {
+          "$ref": "#/definitions/magazine_config",
+          "description": "Magazine Array configuration: wave count, activation pattern, GC settings."
+        },
+
+        "waypoints": {
+          "$ref": "#/definitions/waypoint_config",
+          "description": "Waypoint chain configuration. Required for all module types except ambient_patrol."
+        },
+
+        "attack": {
+          "$ref": "#/definitions/attack_config",
+          "description": "Attack behavior configuration. Required for module types that engage targets."
+        },
+
+        "scramble": {
+          "$ref": "#/definitions/scramble_config",
+          "description": "Scramble-specific configuration. Required only for module_type 'scramble'."
+        },
+
+        "escort": {
+          "$ref": "#/definitions/escort_config",
+          "description": "Escort-specific configuration. Required only for module_type 'bomber_escort'."
+        },
+
+        "proxy_coordinates": {
+          "$ref": "#/definitions/coordinates",
+          "description": "X/Z coordinates where [IN] and [OUT] proxy nodes appear in the BOSEditor workspace."
+        },
+
+        "wiring": {
+          "$ref": "#/definitions/wiring_config",
+          "description": "Cross-module I/O wiring. In 'group' mode, may be null (user wires manually in editor). In 'mission' mode, orchestrator populates this."
+        }
+      }
+    },
+
+    "flight_config": {
+      "type": "object",
+      "required": ["aircraft_type", "ai_skill", "country", "flight_size"],
+      "additionalProperties": false,
+      "properties": {
+        "aircraft_type": {
+          "type": "string",
+          "description": "IL-2 aircraft type identifier (e.g., 'bf109g6', 'p51d15', 'il2m42'). Must match a valid entry in the type catalog."
+        },
+        "ai_skill": {
+          "type": "string",
+          "enum": ["novice", "normal", "veteran", "ace"],
+          "default": "normal",
+          "description": "AI skill level. Maps to the IL-2 AI property value."
+        },
+        "country": {
+          "type": "string",
+          "description": "Country identifier (e.g., 'Germany', 'Russia', 'USA', 'Britain'). Must match IL-2 country values."
+        },
+        "flight_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8,
+          "default": 4,
+          "description": "Number of aircraft per flight (1 leader + N-1 wingmen). All wingmen Target Linked to leader."
+        },
+        "payload_id": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0,
+          "description": "Payload configuration index. 0 = default loadout. Specific values depend on aircraft type."
+        },
+        "fuel": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 1.0,
+          "default": 1.0,
+          "description": "Fuel state as a fraction of maximum capacity. 0.1 = 10%, 1.0 = 100%."
+        },
+        "skin": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "Custom skin filename. Null uses default skin."
+        },
+        "starting_location": {
+          "type": "string",
+          "enum": ["in_air", "on_runway", "parked"],
+          "default": "in_air",
+          "description": "Initial aircraft state. 'parked' and 'on_runway' require airfield coordinates."
+        },
+        "spawn_altitude": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000,
+          "default": 3000,
+          "description": "Spawn altitude in meters. Only used when starting_location is 'in_air'."
+        }
+      }
+    },
+
+    "magazine_config": {
+      "type": "object",
+      "required": ["wave_count", "time_on_station_minutes"],
+      "additionalProperties": false,
+      "description": "Magazine Array configuration. Controls wave cycling and garbage collection. [FMEA EL-001, EC-003, EC-004, SM-004]",
+      "properties": {
+        "wave_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50,
+          "default": 1,
+          "description": "Number of pre-built deactivated flights in the Magazine. Compiler validates: wave_count >= ceil(session_duration / time_on_station). Magazine is a single-use sequential dispenser. [FMEA EL-001]"
+        },
+        "time_on_station_minutes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120,
+          "default": 15,
+          "description": "Time-on-Station in minutes before RTB/despawn triggers. Used for session sizing validation and ToS timer generation."
+        },
+        "gc_despawn_delay_seconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 120,
+          "default": 30,
+          "description": "Delay in seconds after leader OnKilled before ForceComplete+Despawn fires on wingmen. Allows wingmen to complete immediate engagement before cleanup. [FMEA SM-002]"
+        }
+      }
+    },
+
+    "waypoint_config": {
+      "type": "object",
+      "required": ["points"],
+      "additionalProperties": false,
+      "properties": {
+        "loop": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, last waypoint triggers first waypoint (CAP patrol loop). If false, linear route (intercept, ground attack)."
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "default": "medium",
+          "description": "Waypoint priority. Low: fighters may break off to attack. Medium: defend only. High: no deviation."
+        },
+        "points": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["x", "z", "altitude"],
+            "additionalProperties": false,
+            "properties": {
+              "x": { "type": "number", "description": "X coordinate in IL-2 world space." },
+              "z": { "type": "number", "description": "Z coordinate in IL-2 world space." },
+              "altitude": { "type": "integer", "minimum": 0, "maximum": 10000, "description": "Waypoint altitude in meters." },
+              "speed": { "type": "integer", "minimum": 100, "maximum": 800, "default": 350, "description": "Target speed in km/h at this waypoint." },
+              "area": { "type": "integer", "minimum": 100, "maximum": 5000, "default": 500, "description": "Waypoint trigger radius in meters." }
+            }
+          }
+        }
+      }
+    },
+
+    "attack_config": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Attack behavior. Determines AttackArea MCU parameters.",
+      "properties": {
+        "attack_type": {
+          "type": "string",
+          "enum": ["air", "ground", "all"],
+          "default": "air",
+          "description": "Target type filter for the AttackArea MCU."
+        },
+        "attack_area_radius": {
+          "type": "integer",
+          "minimum": 500,
+          "maximum": 50000,
+          "default": 5000,
+          "description": "Radius of the attack area in meters."
+        },
+        "attack_coordinates": {
+          "$ref": "#/definitions/coordinates_3d",
+          "description": "Center of the attack area. If null, defaults to the midpoint of the waypoint chain."
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "default": "high",
+          "description": "Attack priority."
+        }
+      }
+    },
+
+    "scramble_config": {
+      "type": "object",
+      "description": "Scramble module configuration. Aircraft start parked, taxi, takeoff, then execute mission logic after clearing altitude gate.",
+      "additionalProperties": false,
+      "properties": {
+        "airfield_id": {
+          "type": "string",
+          "description": "Airfield identifier from the geographic database. Determines taxi path and runway."
+        },
+        "airfield_coordinates": {
+          "$ref": "#/definitions/coordinates",
+          "description": "Airfield X/Z coordinates. Used if airfield_id is not in the geographic database."
+        },
+        "altitude_gate": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 5000,
+          "default": 500,
+          "description": "Altitude in meters the flight must reach before airborne logic activates. [Spec Section 6.2]"
+        }
+      }
+    },
+
+    "escort_config": {
+      "type": "object",
+      "description": "Bomber Escort configuration. Defines Cover/Attack toggle behavior. Requires new compiler primitive: emit_cover_attack_toggle().",
+      "additionalProperties": false,
+      "properties": {
+        "escorted_module_id": {
+          "type": "string",
+          "description": "module_id of the bomber/transport module this escort is tethered to."
+        },
+        "threat_engagement_radius": {
+          "type": "integer",
+          "minimum": 500,
+          "maximum": 20000,
+          "default": 5000,
+          "description": "Radius in meters within which the escort breaks cover to engage threats."
+        },
+        "return_to_cover_radius": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 30000,
+          "default": 8000,
+          "description": "Radius beyond which the escort returns to cover formation. Must be > threat_engagement_radius to prevent rapid toggling."
+        }
+      }
+    },
+
+    "wiring_config": {
+      "type": ["object", "null"],
+      "default": null,
+      "description": "Cross-module I/O connections. Null in 'group' mode (user wires manually). Populated by the orchestrator in 'mission' mode.",
+      "additionalProperties": false,
+      "properties": {
+        "in_activate_source": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "module_id whose [OUT] triggers this module's [IN]_Activate. Null = activated by Master Core."
+        },
+        "out_success_target": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "module_id whose [IN]_Activate is triggered by this module's [OUT]_Success. Null = stub generated. [FMEA EC-002]"
+        },
+        "out_fail_target": {
+          "type": ["string", "null"],
+          "default": null,
+          "description": "module_id whose [IN]_Activate is triggered by this module's [OUT]_Fail. Null = stub generated. [FMEA EC-002]"
+        }
+      }
+    },
+
+    "coordinates": {
+      "type": "object",
+      "required": ["x", "z"],
+      "additionalProperties": false,
+      "properties": {
+        "x": { "type": "number", "description": "X coordinate in IL-2 world space." },
+        "z": { "type": "number", "description": "Z coordinate in IL-2 world space." }
+      }
+    },
+
+    "coordinates_3d": {
+      "type": "object",
+      "required": ["x", "z", "altitude"],
+      "additionalProperties": false,
+      "properties": {
+        "x": { "type": "number" },
+        "z": { "type": "number" },
+        "altitude": { "type": "integer", "minimum": 0, "maximum": 10000 }
+      }
+    }
+  }
+}

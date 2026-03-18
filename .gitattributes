@@ -1,0 +1,21 @@
+# .gitattributes
+
+# Enforce LF line endings (Unix style) for code
+*.py text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# IL-2 game files (if you commit them locally, mark as binary)
+*.mission binary
+*.group binary
+*.miz binary
+
+# Python binary files
+*.pyc binary
+__pycache__/ binary
+
+# Windows batch/powershell (CRLF)
+*.bat text eol=crlf
+*.ps1 text eol=crlf
