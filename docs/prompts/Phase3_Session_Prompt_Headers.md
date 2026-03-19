@@ -49,7 +49,8 @@ Phase 2 (2.5h PASSED)
 |---|---|
 | **Task ID** | 3.1 |
 | **Component** | Compiler (`src/mmf/compiler/modules/intercept.py`) + GUI (`src/ui/gui/`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 1.10 (Static CAP composition — all compiler primitives), 2.5h (GUI compilation verified in-game) |
 | **Delivers To** | 3.1h (in-game test), 3.2 (Scramble extends intercept behavior), 3.4 (Bomber Escort reuses intercept waypoint chain), 3.5 (cross-module integration) |
 | **Reference** | See `ARCHITECTURE.md` — all FMEA Constraints active; Directory Structure → `src/mmf/compiler/modules/`, `data/module_templates/`; MMF Spec Section 6.2 |
@@ -67,6 +68,9 @@ The Intercept module validates that the compiler's composition pipeline generali
 > - Section 6.2: Future Modules — Intercept is the first non-CAP module type
 > - Section 5.2: Magazine Array — wave management applies identically to intercept flights
 > - Section 5.3: Garbage Collection — dual-path GC (OnKilled + ToS) applies identically
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -115,6 +119,25 @@ The Intercept module must call the same compiler primitives as the Static CAP �
 > - GUI parameter form renders, exports valid JSON, compiles successfully
 > - `data/module_templates/intercept.json` validates against the MMF schema
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Human Gate 3.1h — In-Game Test (Intercept Module)
@@ -158,7 +181,8 @@ Document the test results before proceeding to tasks 3.2 or 3.4. For each verifi
 |---|---|
 | **Task ID** | 3.2 |
 | **Component** | Compiler (`src/mmf/compiler/modules/scramble.py`, `src/mmf/compiler/takeoff_sequence.py`) + GUI (`src/ui/gui/`) |
-| **Model Tier** | Tier 1 — Opus 4.6 / Gemini 3.1 Pro |
+| **Model Tier** | Tier 1 |
+| **Assigned Model** | Opus 4.6 / Gemini 3.1 Pro |
 | **Depends On** | 3.1 (Intercept module — Scramble extends intercept behavior with a pre-flight takeoff sequence) |
 | **Delivers To** | 3.2h (in-game test), 3.5 (cross-module integration) |
 | **Reference** | See `ARCHITECTURE.md` — all FMEA Constraints active; Directory Structure → `src/mmf/compiler/`; MMF Spec Section 6.2 (Scramble description); IL-2 Manual: ComplexTrigger (pg. 286-287) |
@@ -184,6 +208,9 @@ The `MCU_TR_ComplexTrigger` is the critical new element. It evaluates a compound
 > - [EL-002] HIGH — Entity proxy binding is at elevated risk during mass takeoff events. Aircraft transition from parked (static 3D object) to airborne (dynamic physics object). The 2-second binding delay must account for this transition.
 > - [SM-002] HIGH — If the leader is killed during the ground phase (e.g., strafed on the runway), all wingmen must be GC'd. The leader-kill GC chain must be active from the moment of activation, not deferred until the airborne phase.
 > - [EC-003] HIGH — Scramble flights MUST use Activate/Deactivate, not Spawn. Formation hierarchy preservation is critical for the taxi/takeoff sequence — wingmen must follow the leader's taxi path.
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -257,6 +284,25 @@ Add a Scramble parameter form to the GUI that includes all intercept parameters 
 > - GUI form renders scramble-specific parameters with validation ranges
 > - `data/module_templates/scramble.json` validates against the MMF schema
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Human Gate 3.2h — In-Game Test (Scramble Module)
@@ -307,7 +353,8 @@ Document the test results before proceeding. For each verification item: PASS, F
 |---|---|
 | **Task ID** | 3.3 |
 | **Component** | Compiler (`src/mmf/compiler/modules/ground_attack.py`) + GUI (`src/ui/gui/`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 1.10 (Static CAP composition — all compiler primitives), 2.5h (GUI compilation verified in-game) |
 | **Delivers To** | 3.3h (in-game test), 3.5 (cross-module integration) |
 | **Reference** | See `ARCHITECTURE.md` — all FMEA Constraints active; Directory Structure → `src/mmf/compiler/modules/`; MMF Spec Sections 3.1 (PI-001 — AttackArea validation), 5.3 (GC) |
@@ -326,6 +373,9 @@ The Ground Attack module differs from the Intercept module in two ways: (1) the 
 > - [SM-002] HIGH — All RTB/Waypoint commands must Object Link to every aircraft in the flight. Ground attack flights may take heavy losses from ground defenses — leader-kill probability is higher than air-to-air intercept modules.
 > - [SM-004] LOW — Dual-path GC remains active. OnKilled and ToS both route to Magazine Array advance.
 > - [EC-004] HIGH — GC-gated wave activation. Ground attack sorties may be shorter than air patrols (target destroyed → RTB), so wave pacing may be faster. The AI cap must not be exceeded.
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -378,6 +428,25 @@ Same as task 3.1 R4: the Ground Attack module must call existing compiler primit
 > - GUI form renders ground attack parameters, exports valid JSON, compiles successfully
 > - `data/module_templates/ground_attack.json` validates against the MMF schema
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Human Gate 3.3h — In-Game Test (Ground Attack Module)
@@ -428,7 +497,8 @@ Document the test results before proceeding. For each verification item: PASS, F
 |---|---|
 | **Task ID** | 3.4 |
 | **Component** | Compiler (`src/mmf/compiler/modules/bomber_escort.py`, `src/mmf/compiler/cover_attack_toggle.py`) + GUI (`src/ui/gui/`) |
-| **Model Tier** | Tier 1 — Opus 4.6 / Gemini 3.1 Pro |
+| **Model Tier** | Tier 1 |
+| **Assigned Model** | Opus 4.6 / Gemini 3.1 Pro |
 | **Depends On** | 3.1 (Intercept module — Bomber Escort reuses the intercept waypoint chain and engagement logic) |
 | **Delivers To** | 3.4h (in-game test), 3.5 (cross-module integration) |
 | **Reference** | See `ARCHITECTURE.md` — all FMEA Constraints active; Directory Structure → `src/mmf/compiler/`; MMF Spec Section 6.2 (Bomber Escort description), Section 4.2 (CheckZone avoidance) |
@@ -455,6 +525,9 @@ The proximity trigger presents a design tension with the spec's CheckZone avoida
 > - [SM-003] HIGH — Timer pause semantics are CRITICAL for the combat duration timer. The escort's "attack duration" timer controls how long fighters stay in Attack mode before reverting to Cover. If this timer is recycled across engagements, it carries paused state and fires prematurely. Each engagement MUST use a fresh timer instance.
 > - [EL-003] CRITICAL — Entity proxy binding for the escort fighters must pass integrity checks. The escort's MCU_TR_Entity proxies detect OnKilled for the escort fighters themselves (triggering GC) and must be distinct from any Entity proxies on the bomber formation.
 > - Section 4.2: CheckZone avoidance — minimize spatial polling. One CheckZone per module maximum. Deactivate during non-polling phases.
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -541,6 +614,25 @@ Add a Bomber Escort parameter form to the GUI. The form must include: bomber ref
 > - Entity proxy bindings for escort fighters are distinct from bomber Entity proxies
 > - GUI form renders escort parameters including bomber reference selector
 > - `data/module_templates/bomber_escort.json` validates against the MMF schema
+
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
 
 ---
 

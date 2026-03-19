@@ -59,7 +59,8 @@ Phase 0 (0.2 Parser + 0.4 Catalog + 0.5 Schema + 0.6 Structure)
 |---|---|
 | **Task ID** | 1.1 |
 | **Component** | Compiler (`src/mmf/compiler/id_generator.py`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 0.5 (JSON schema, defines `compiler_options.id_counter_start`) |
 | **Delivers To** | Every compiler primitive (1.2 through 1.10) — all ID assignment routes through here |
 | **Reference** | See `ARCHITECTURE.md` — FMEA Constraints → PI-003, Directory Structure → `src/mmf/compiler/` |
@@ -76,6 +77,9 @@ The IL-2 engine requires every entity, MCU, and translator block to have a uniqu
 > - [PI-003] CRITICAL — Compiler SHALL maintain a single monotonically increasing counter per session. Initializes from max(existing Index values) + 1. Per-module fixed offsets are PROHIBITED.
 > - [EC-002] MEDIUM — Stub IDs use reserved range 900000–999999, excluded from the main counter pool.
 > - Section 2.4: ID Management
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -113,6 +117,25 @@ Single-threaded compilation only. No locking needed.
 > - With `mission_data` containing Index values [1, 5, 100], counter initializes to 101
 > - Unit test: `next_id()` called 1000 times produces 1000 unique, ascending integers
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 1.2 — Spatial Offset Engine
@@ -121,7 +144,8 @@ Single-threaded compilation only. No locking needed.
 |---|---|
 | **Task ID** | 1.2 |
 | **Component** | Compiler (`src/mmf/compiler/spatial_offset.py`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 1.1 (ID generator — spatial engine is session-scoped alongside the counter) |
 | **Delivers To** | 1.3, 1.4, 1.10 — all MCU coordinate assignment goes through here |
 | **Reference** | See `ARCHITECTURE.md` — FMEA Constraints → PI-004, Directory Structure → `src/mmf/compiler/` |
@@ -137,6 +161,9 @@ All core calculation MCUs — counters, timers, entity proxies, command buffers 
 > **Relevant MMF Spec Rev 2 / FMEA Constraints**
 > - [PI-004] MEDIUM — Remote zone SHALL be partitioned. Each module receives a unique offset block, incremented by 1000m on the Z-axis per module. Compiler tracks allocated blocks per session.
 > - Section 2.3: Spatial Blackboxing
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Requirements
 
@@ -173,6 +200,25 @@ The allocator is instantiated once per compilation session and shared across all
 > - Allocating the same `module_id` twice returns the same block (idempotent)
 > - Unit test: 100 modules produce 100 distinct Z-axis blocks, none overlapping
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 1.3 — Flight Emitter + Entity Proxy Binding
@@ -181,7 +227,8 @@ The allocator is instantiated once per compilation session and shared across all
 |---|---|
 | **Task ID** | 1.3 |
 | **Component** | Compiler (`src/mmf/compiler/entity_proxy.py`) |
-| **Model Tier** | Tier 1 — Opus 4.6 / Gemini 3.1 Pro |
+| **Model Tier** | Tier 1 |
+| **Assigned Model** | Opus 4.6 / Gemini 3.1 Pro |
 | **Depends On** | 0.4 (MCU type catalog — Aircraft and Entity field definitions), 1.1 (ID generator) |
 | **Delivers To** | 1.4 (Magazine Array — needs flight hierarchy), 1.6 (GC — needs Entity proxy) |
 | **Reference** | See `ARCHITECTURE.md` — FMEA Constraints → EL-002, EL-003, Directory Structure → `src/mmf/compiler/` |
@@ -200,6 +247,9 @@ A flight in IL-2 is a leader aircraft with one or more wingmen. The leader has a
 > - Section 4.2: State Extraction (MCU_TR_Entity)
 > - Section 4.2.1: Entity Binding Temporal Dependency
 > - Section 5.2: The Magazine Array — flights start Enabled=FALSE
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Requirements
 
@@ -249,6 +299,25 @@ Any assertion failure raises `BindingIntegrityError` and aborts compilation with
 > - 2-second MCU_Timer inserted between Activate and first Entity event consumer
 > - `BindingIntegrityError` raised and compilation aborted when assertions are injected to fail
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 1.4 — Magazine Array Activator
@@ -257,7 +326,8 @@ Any assertion failure raises `BindingIntegrityError` and aborts compilation with
 |---|---|
 | **Task ID** | 1.4 |
 | **Component** | Compiler (`src/mmf/compiler/magazine_array.py`) |
-| **Model Tier** | Tier 1 — Opus 4.6 / Gemini 3.1 Pro |
+| **Model Tier** | Tier 1 |
+| **Assigned Model** | Opus 4.6 / Gemini 3.1 Pro |
 | **Depends On** | 1.3 (flight emitter — Magazine Array wraps flight hierarchies) |
 | **Delivers To** | 1.6 (GC — GC-gated activation routes back to the counter), 1.10 (composition) |
 | **Reference** | See `ARCHITECTURE.md` — FMEA Constraints → EL-001, EC-003, EC-004, Directory Structure → `src/mmf/compiler/` |
@@ -278,6 +348,9 @@ The Magazine Array is the answer to a specific IL-2 engine limitation: `MCU_CMD_
 > - Section 5.2.1: Activation Pattern
 > - Section 5.2.2: Counter Behavior & Session Sizing
 > - [EC-004] HIGH — GC-gated wave activation: next-wave counter SHALL NOT fire until GC chain confirms completion.
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Requirements
 
@@ -318,6 +391,25 @@ Wave 0 (the first wave) is activated by the initialization buffer (from task 1.9
 > - `Counter.Count == wave_count`
 > - Activating wave 0 via MCU_Activate produces a complete flight (EL-003 assertions still pass)
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 1.5 — Command Buffer + Serialization
@@ -326,7 +418,8 @@ Wave 0 (the first wave) is activated by the initialization buffer (from task 1.9
 |---|---|
 | **Task ID** | 1.5 |
 | **Component** | Compiler (`src/mmf/compiler/command_buffer.py`) |
-| **Model Tier** | Tier 1 — Opus 4.6 / Gemini 3.1 Pro |
+| **Model Tier** | Tier 1 |
+| **Assigned Model** | Opus 4.6 / Gemini 3.1 Pro |
 | **Depends On** | 1.1 (ID generator) |
 | **Delivers To** | 1.10 (composition — all `[IN]` signals route through the buffer) |
 | **Reference** | See `ARCHITECTURE.md` — FMEA Constraints → SM-001, SM-003, Directory Structure → `src/mmf/compiler/` |
@@ -341,6 +434,9 @@ You are a Principal Python Systems Developer. The Command Buffer is the race-con
 > - Section 4.1: The Command Buffer
 > - Section 4.1.1: Serialization Sequence
 > - Section 4.1.2: Timer Pause Semantics
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Requirements
 
@@ -373,6 +469,24 @@ If a module defines more than 4 `[IN]` ports, emit a `CompilerWarning`: max seri
 > - `TimerReuseError` raised if timer assignment logic attempts to reuse a used timer
 > - Module with 4 `[IN]` ports generates 4 distinct timer instances with delays 50/100/150/200ms
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
 ---
 
 ## Session 1.6 — Garbage Collection
@@ -381,7 +495,8 @@ If a module defines more than 4 `[IN]` ports, emit a `CompilerWarning`: max seri
 |---|---|
 | **Task ID** | 1.6 |
 | **Component** | Compiler (`src/mmf/compiler/garbage_collection.py`) |
-| **Model Tier** | Tier 1 — Opus 4.6 / Gemini 3.1 Pro |
+| **Model Tier** | Tier 1 |
+| **Assigned Model** | Opus 4.6 / Gemini 3.1 Pro |
 | **Depends On** | 1.3 (flight emitter — GC wraps Entity proxy events), 1.4 (Magazine Array — GC advances the counter) |
 | **Delivers To** | 1.10 (composition — GC output feeds Magazine Array counter) |
 | **Reference** | See `ARCHITECTURE.md` — FMEA Constraints → SM-002, SM-004, Directory Structure → `src/mmf/compiler/` |
@@ -396,6 +511,9 @@ You are a Principal Python Systems Developer. Garbage collection is the AI slot 
 > - Section 5.3: Garbage Collection
 > - Section 5.3.1: Dual-Path Activation
 > - Section 5.3.2: Leader-Kill Resilience
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Requirements
 
@@ -433,6 +551,25 @@ Each path (A and B) passes through its own dedicated 1-count non-resetting MCU_C
 > - No `MCU_TR_CheckZone` node in any GC chain
 > - 30-second timer present in leader-kill parallel GC chain
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 1.7 — Dependency Stub System
@@ -441,7 +578,8 @@ Each path (A and B) passes through its own dedicated 1-count non-resetting MCU_C
 |---|---|
 | **Task ID** | 1.7 |
 | **Component** | Compiler (`src/mmf/compiler/dependency_stubs.py`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 1.1 (ID generator — stub IDs are from a reserved range, excluded from the main counter) |
 | **Delivers To** | 1.10 (composition — pre-flight validation runs before .Group file is written) |
 | **Reference** | See `ARCHITECTURE.md` — FMEA Constraints → EC-002, Directory Structure → `src/mmf/compiler/` |
@@ -453,6 +591,9 @@ You are a Senior Python Developer implementing the pre-flight dependency check. 
 > **Relevant MMF Spec Rev 2 / FMEA Constraints**
 > - [EC-002] MEDIUM — Stub MCU_Timers allocated from reserved range 900000–999999 (excluded from dynamic ID counter). Compiler emits comment block listing all stubs, their IDs, and the missing module references they catch.
 > - Section 3.2: Dependency Management (The Stub System)
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Requirements
 
@@ -488,6 +629,24 @@ Emit a comment block at the top of the .Group file listing:
 > - Stub manifest comment block is present at top of emitted .Group file
 > - Manifest accurately lists all stubs with their IDs and missing reference descriptions
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
 ---
 
 ## Session 1.8 — Required Field Validator + Reserved-Char Filter
@@ -496,7 +655,8 @@ Emit a comment block at the top of the .Group file listing:
 |---|---|
 | **Task ID** | 1.8 |
 | **Component** | Compiler (`src/mmf/compiler/validator.py`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 0.4 (MCU catalog — catalog defines required fields per MCU type) |
 | **Delivers To** | 1.10 (composition — validation runs at compilation entry point) |
 | **Reference** | See `ARCHITECTURE.md` — FMEA Constraints → PI-001, PI-002, Directory Structure → `src/mmf/compiler/` |
@@ -511,6 +671,9 @@ You are a Senior Python Developer implementing the two input-hygiene gates. Thes
 > - Section 3: Standardized I/O & Logic Hooks
 > - Section 3.1: Compiler Validation
 > - Section 2.1: JSON Intermediary (PI-002 context)
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Requirements
 
@@ -548,6 +711,25 @@ Validation order: PI-001 check first, PI-002 filter second. Both run before ID a
 > - PI-002 filter log entry present for each stripped character
 > - Valid input with no violations compiles without error
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 1.9 — Initialization Buffer
@@ -556,7 +738,8 @@ Validation order: PI-001 check first, PI-002 filter second. Both run before ID a
 |---|---|
 | **Task ID** | 1.9 |
 | **Component** | Compiler (`src/mmf/compiler/init_buffer.py`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 1.4 (Magazine Array — init buffer triggers wave 0) |
 | **Delivers To** | 1.10 (composition — Master Core is the mission start node) |
 | **Reference** | See `ARCHITECTURE.md` — FMEA Constraints → EC-001, Directory Structure → `src/mmf/compiler/` |
@@ -568,6 +751,9 @@ You are a Senior Python Developer implementing the mission initialization gate. 
 > **Relevant MMF Spec Rev 2 / FMEA Constraints**
 > - [EC-001] MEDIUM — Master Core initialization delay configurable (default 3s, range 3–10s). Compiler emits warning if total `Enabled=FALSE` entities > 200 AND delay < 5s.
 > - Section 5.1: The Initialization Buffer
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Requirements
 
@@ -596,6 +782,24 @@ After emission, count total `Enabled=FALSE` entities in the output. If count > 2
 > - No warning emitted for 250-entity mission with 5s delay
 > - `ConfigurationError` raised for delay values outside [3, 10]
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
 ---
 
 ## Session 1.10 — Static CAP Composition
@@ -604,7 +808,8 @@ After emission, count total `Enabled=FALSE` entities in the output. If count > 2
 |---|---|
 | **Task ID** | 1.10 |
 | **Component** | Compiler (`src/mmf/compiler/modules/static_cap.py`) |
-| **Model Tier** | Tier 1 — Opus 4.6 / Gemini 3.1 Pro |
+| **Model Tier** | Tier 1 |
+| **Assigned Model** | Opus 4.6 / Gemini 3.1 Pro |
 | **Depends On** | 1.1–1.9 (all compiler primitives must be implemented and tested) |
 | **Delivers To** | 1.10h (in-game test — the output of this session is what gets flown) |
 | **Reference** | See `ARCHITECTURE.md` — all FMEA Constraints active simultaneously; Phase Mapping → Phase 1; Directory Structure → `src/mmf/compiler/` |
@@ -621,6 +826,9 @@ The Static CAP is the first complete module and the proof that the compiler arch
 > - All Phase 1 FMEA constraints active simultaneously: PI-001, PI-002, PI-003, PI-004, EL-001, EL-002, EL-003, SM-001, SM-002, SM-003, SM-004, EC-001, EC-002, EC-003, EC-004
 > - Section 6.1: Initial Validation Prototype — Static CAP description
 > - `mmf-sample-static-cap.json` — reference input payload
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Requirements
 
@@ -660,6 +868,25 @@ Generate one `MCU_CMD_AttackArea` node from the `attack` block. `AttackArea.Targ
 > - Proxy nodes (`[IN]`, `[OUT]`) appear at `proxy_coordinates` in BOSEditor
 > - Internal MCUs appear at remote coordinates (50km+ offset)
 > - `mmf-sample-static-cap.json` compiles to a valid .Group file without warnings
+
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
 
 ---
 

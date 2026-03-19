@@ -2,7 +2,7 @@
 
 import os
 import pytest
-from mmf.parser.deserializer import (
+from parser import (
     parse_string, parse_file, ParseError,
     get_field, get_fields, get_children,
 )

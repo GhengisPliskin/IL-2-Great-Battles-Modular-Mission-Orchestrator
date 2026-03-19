@@ -2,7 +2,7 @@
 
 **Version:** 2.0 (Post-FMEA)  
 **Target Environment:** IL-2 Sturmovik Great Battles Mission Editor  
-**Language:** Python 3.8+  
+**Language:** Python 3.10+  
 **Last Updated:** Phase 0.2 Complete
 
 ---
@@ -45,12 +45,16 @@ il2-mmo/
 ├── README.md                    # Project overview, setup instructions
 ├── ARCHITECTURE.md              # This file
 ├── CONSTRAINTS.md               # FMEA traceability (PI-*, EL-*, SM-*, EC-*)
+├── KEY_DECISION_LOG.md          # Architectural decision records
+├── CODE_DECISION_LOG.md         # Code-level decisions and debugging heuristics
 ├── LICENSE
 ├── requirements.txt             # Python dependencies
 ├── requirements-dev.txt         # Dev dependencies (pytest, black, mypy)
-├── setup.py                     # Package installation config
 ├── pyproject.toml               # Python project metadata
-└── .gitignore                   # Git ignore patterns
+├── .gitignore                   # Git ignore patterns
+│
+└── working/                     # Ephemeral per-session scratch space
+    └── CODE_DECISIONS_PATCH.md  # Provisional decisions — merged into CODE_DECISION_LOG.md at HUMAN gate
 ```
 
 ### src/ — Source Code
@@ -93,7 +97,19 @@ src/
 │   │   ├── entity_proxy.py      # [EL-002,EL-003] Entity binding
 │   │   ├── garbage_collection.py # [SM-002,SM-004] GC chains
 │   │   ├── dependency_stubs.py  # [EC-002] Stub generation
+│   │   ├── init_buffer.py       # [EC-001] Initialization delay
+│   │   ├── validator.py         # [PI-001] Required field check + [PI-002] reserved-char filter
+│   │   ├── takeoff_sequence.py  # Phase 3.2: Scramble takeoff primitive
+│   │   ├── cover_attack_toggle.py # Phase 3.4: Bomber Escort state machine
 │   │   ├── compiler.py          # Main compilation driver
+│   │   │
+│   │   ├── modules/             # Phase 1+3: Module-specific compilers
+│   │   │   ├── __init__.py
+│   │   │   ├── static_cap.py    # Phase 1.10
+│   │   │   ├── intercept.py     # Phase 3.1
+│   │   │   ├── scramble.py      # Phase 3.2
+│   │   │   ├── ground_attack.py # Phase 3.3
+│   │   │   └── bomber_escort.py # Phase 3.4
 │   │   │
 │   │   └── tests/
 │   │       ├── __init__.py
@@ -170,7 +186,7 @@ tests/
 │   └── test_phase5_orchestrator.py
 │
 └── fixtures/
-    ├── il2_files/               # Reference .group/.mission files
+    ├── il2_files/               # Reference .group/.mission files (exclude from Repomix — binary data)
     │   └── (populated Phase 0.1)
     │
     └── json/
@@ -182,11 +198,19 @@ tests/
 
 ```
 docs/
+├── KANBAN_SETUP.md              # Project board configuration
 ├── PHASES.md                    # Phase breakdown, dependencies, tasks
 ├── FMEA.md                      # FMEA traceability index
+├── MMF_Specification_V2.md      # Post-FMEA architecture specification (reference)
+├── MMF_FMEA_Report_v2.md        # Full FMEA analytical narrative (reference)
+├── IL-2_Sturmovik_Mission_Editor_Manual.pdf  # IL-2 Mission Editor reference (gitignored, excluded from Repomix)
 ├── USER_GUIDE.md                # Phase 6: End-user getting started
 ├── CONTRIBUTOR_GUIDE.md         # Phase 6: Developer onboarding
 ├── API_REFERENCE.md             # mmf, compiler, schema API docs
+│
+├── templates/                   # Skill reference templates (read-only after scaffolding)
+│   ├── templates.md             # All document templates
+│   └── master-plan-template.md  # Master Project Plan template
 │
 └── ARCHITECTURE/                # Architecture diagrams
     ├── three_layer_architecture.drawio
@@ -237,11 +261,24 @@ scripts/
 | Phase | Component | Output Directory | Status | Model Tier |
 |-------|-----------|------------------|--------|------------|
 | 0.1 | File Collection | `tests/fixtures/il2_files/` | HUMAN GATE | N/A |
-| 0.2 | Parser Library | `src/mmf/parser/` | **COMPLETE** ✓ | Tier 1 (Opus) |
-| 0.3 | Schema Definition | `src/mmf/schema/` | Pending | Tier 1 (Opus) |
-| 1.3-1.6 | Compiler Primitives | `src/mmf/compiler/` | Pending | Tier 1 (Opus) |
-| 1.10 | In-game Test | (HUMAN GATE) | Pending | N/A |
-| 2.1-2.2 | Module Reverse Engineer | `src/backend/mre/` | Pending | Tier 2 (Sonnet) |
+| 0.2 | Parser (ASCII → dict) | `src/mmf/parser/` | **COMPLETE** ✓ | Tier 1 (Opus) |
+| 0.3 | Writer (dict → ASCII) | `src/mmf/parser/` | Pending | Tier 2 (Sonnet) |
+| 0.4 | MCU Type Catalog | `src/mmf/parser/`, `data/` | Pending | Tier 2 (Sonnet) |
+| 0.5 | JSON Schema Contract | `src/mmf/schema/` | Pending | Tier 1 (Opus) |
+| 0.5h | Schema Approval | (HUMAN GATE) | Pending | N/A |
+| 0.6 | Project Structure | `src/` (all packages) | Pending | Tier 3 (Haiku) |
+| 1.1 | ID Generator (PI-003) | `src/mmf/compiler/` | Pending | Tier 2 (Sonnet) |
+| 1.2 | Spatial Offset (PI-004) | `src/mmf/compiler/` | Pending | Tier 2 (Sonnet) |
+| 1.3 | Flight Emitter (EL-003) | `src/mmf/compiler/` | Pending | Tier 1 (Opus) |
+| 1.4 | Magazine Array (EL-001) | `src/mmf/compiler/` | Pending | Tier 1 (Opus) |
+| 1.5 | Command Buffer (SM-001) | `src/mmf/compiler/` | Pending | Tier 1 (Opus) |
+| 1.6 | Garbage Collection (SM-002) | `src/mmf/compiler/` | Pending | Tier 1 (Opus) |
+| 1.7 | Dependency Stubs (EC-002) | `src/mmf/compiler/` | Pending | Tier 2 (Sonnet) |
+| 1.8 | Validator + Filter (PI-001) | `src/mmf/compiler/` | Pending | Tier 2 (Sonnet) |
+| 1.9 | Init Buffer (EC-001) | `src/mmf/compiler/` | Pending | Tier 2 (Sonnet) |
+| 1.10 | Static CAP Composition | `src/mmf/compiler/modules/` | Pending | Tier 1 (Opus) |
+| 1.10h | In-game Test | (HUMAN GATE) | Pending | N/A |
+| 2.1-2.2 | Module Reverse Engineer | `src/backend/mre/` | Pending | Tier 1 (Opus) |
 | 2.3-2.6 | Module GUI | `src/ui/gui/` | Pending | Tier 2 (Sonnet) |
 | 4.1-4.3 | Map Extraction | `src/backend/map_extractor/` | Pending | Tier 2 (Sonnet) |
 | 5.1-5.3 | Orchestrator Core | `src/backend/orchestrator/` | Pending | Tier 1 (Opus) |
@@ -413,6 +450,6 @@ Claude will find the directory structure and understand placement immediately.
 
 ---
 
-**Last Updated:** March 17, 2026  
+**Last Updated:** March 18, 2026  
 **Phase Progress:** 0.2 Complete (1/7 phases)  
-**Next Phase:** 0.3 (Schema Definition) → Phase 1.3 (Compiler Primitives)
+**Next Phase:** 0.3 (ASCII Writer), 0.4 (MCU Catalog), 0.5 (JSON Schema), 0.6 (Project Structure)

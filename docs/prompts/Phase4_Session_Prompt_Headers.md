@@ -75,7 +75,8 @@ Phase 0 (0.2 Parser + 0.4 Catalog)
 |---|---|
 | **Task ID** | 4.1 |
 | **Component** | Map Data Extractor (`src/backend/map_extractor/extractor.py`, `src/backend/map_extractor/coordinate_db.py`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 0.2 (parser library — reads .Mission ASCII), 0.4 (MCU type catalog — airfield and spawn point field definitions), 4.0h (stock map files) |
 | **Delivers To** | 4.2 (primary map database population), 4.3 (front-line extraction), 4.4 (route generation consumes airfield DB), Phase 5.1 (mission assembly reads airfield coordinates) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `src/backend/map_extractor/`, Phase Mapping → 4.1–4.3 |
@@ -94,6 +95,9 @@ The output feeds directly into the Phase 5 Orchestrator, which uses airfield coo
 > - Section 2.1: JSON Intermediary — Extractor output is JSON, consumed by the Orchestrator's mission assembly engine
 > - Section 2.3: Spatial Blackboxing — Extractor deals with real map coordinates (not remote zones); these feed the user-facing proxy coordinate layer
 > - ARCHITECTURE.md: Output directory → `data/map_databases/`
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -169,6 +173,25 @@ After extraction, run a self-check:
 > - Coordinates visually spot-checked in BOSEditor for at least 2 maps (human gate 4.2h)
 > - CLI processes a single map file and a batch directory correctly
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Human Gate 4.2h — In-Editor Coordinate Validation
@@ -207,7 +230,8 @@ Document results per map. For each airfield: CONFIRMED, OFFSET (specify the erro
 |---|---|
 | **Task ID** | 4.2 |
 | **Component** | Map Data Extractor + Data (`src/backend/map_extractor/`, `data/map_databases/`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 4.1 (Extractor tool), 4.2h (validated extraction accuracy) |
 | **Delivers To** | 4.4 (route generation — needs complete airfield DB), 4.5 (remaining maps extend this DB), Phase 5.1 (mission assembly) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `data/map_databases/`, Phase Mapping → 4.1–4.3 |
@@ -225,6 +249,9 @@ The output is the production geographic database stored at `data/map_databases/`
 > **Relevant MMF Spec Rev 2 Sections**
 > - Section 2.3: Spatial Blackboxing — the map database provides the real-world coordinates that the Orchestrator places proxy nodes at; internal MCU logic is offset to remote zones per PI-004
 > - ARCHITECTURE.md: Output → `data/map_databases/maps.sqlite3`
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -300,6 +327,25 @@ Post-population validation:
 > - Per-map JSON files stored in `data/map_databases/json/` and consistent with the SQLite database
 > - Community cross-reference log produced (even if no community data was available)
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 4.3 — Front-Line Reference Data Extraction
@@ -308,7 +354,8 @@ Post-population validation:
 |---|---|
 | **Task ID** | 4.3 |
 | **Component** | Map Data Extractor + Data (`src/backend/map_extractor/`, `data/map_databases/`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 4.1 (Extractor tool — same parser pipeline extracts icon translator positions) |
 | **Delivers To** | Phase 5.3 (scenario templates use front-line data to calculate intercept points, patrol zones, and target areas) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `data/map_databases/`, Phase Mapping → 4.1–4.3 |
@@ -326,6 +373,9 @@ The Orchestrator (Phase 5.3) uses front-line data to calculate tactically plausi
 > **Relevant MMF Spec Rev 2 Sections**
 > - Section 2.3: Spatial Blackboxing — front-line coordinates are real map positions used for proxy node placement
 > - Section 6.2: Future Modules — Scramble, Bomber Escort, and other modules reference target areas that derive from front-line positions
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -401,6 +451,25 @@ class MapDatabase:
 > - `get_front_line()` returns an ordered polyline for each extracted scenario
 > - `get_nearest_front_line_point()` returns the geometrically closest point on the line to an arbitrary coordinate
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 4.4 — Route Generation Utility
@@ -409,7 +478,8 @@ class MapDatabase:
 |---|---|
 | **Task ID** | 4.4 |
 | **Component** | Map Data Extractor (`src/backend/map_extractor/`) |
-| **Model Tier** | Tier 1 — Opus 4.6 / Gemini 3.1 Pro |
+| **Model Tier** | Tier 1 |
+| **Assigned Model** | Opus 4.6 / Gemini 3.1 Pro |
 | **Depends On** | 4.2 (validated airfield database with coordinates and spawn points) |
 | **Delivers To** | Phase 5.3 (scenario templates call the route generator for every AI flight path) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `src/backend/map_extractor/`, Phase Mapping; Master Project Plan — AI Module Use Recommendations (spatial planning assigned to Tier 1) |
@@ -428,6 +498,9 @@ Route plausibility is not cosmetic. A fighter patrol at 500m altitude over a hea
 > - Section 6.1: Static CAP validation prototype — the route generator produces the waypoint data structure that the compiler's waypoint emitter (Phase 1.10, R2) consumes
 > - PI-001 (CRITICAL): Required Field Schema — generated waypoint data must include all fields the compiler expects (x, z, altitude, speed, area). Missing fields cause compilation abort.
 > - PI-004 (MEDIUM): Spatial partitioning — the route generator outputs real map coordinates for proxy node placement; internal MCU coordinates are offset separately by the compiler
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 > **[PI-001] — CRITICAL** Route output must produce complete waypoint structures. The compiler will abort if any waypoint is missing required fields (x, z, altitude, speed). The route generator is the upstream source of these values for orchestrated missions.
 
@@ -503,6 +576,25 @@ Calculate approximate total route distance. If the round-trip distance exceeds a
 > - Fuel feasibility warning emitted for a route exceeding 300km
 > - Route is tactically plausible: no underground waypoints, no 90° turns at cruise speed, altitude appropriate to mission type
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 4.5 — Remaining Maps + Repeatable Process
@@ -511,7 +603,8 @@ Calculate approximate total route distance. If the round-trip distance exceeds a
 |---|---|
 | **Task ID** | 4.5 |
 | **Component** | Map Data Extractor + Data (`src/backend/map_extractor/`, `data/map_databases/`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 4.2 (established extraction pipeline and database schema) |
 | **Delivers To** | Phase 5 (complete geographic database), Phase 6 (distribution — database bundled with executable) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `data/map_databases/`, Phase Mapping → 4.1–4.3 |
@@ -529,6 +622,9 @@ The deliverable is twofold: (1) a complete database covering every available map
 > **Relevant MMF Spec Rev 2 Sections**
 > - Section 2.2: Syntax Agnosticism — the Extractor must handle new maps without core code changes; only the input files change
 > - ARCHITECTURE.md: `data/map_databases/README.md` — process documentation belongs here
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -584,6 +680,12 @@ Update metadata after each extraction run.
 > - No extraction errors on any map (edge cases documented and handled)
 > - Database integrity checks pass on the full database
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
 ---
 
 ## Human Gates — Summary
@@ -602,3 +704,16 @@ Phase 4 contains two human gates. AI sessions cannot proceed past these gates un
 - Run sessions 4.2 and 4.3 in parallel (both depend on 4.1 but not on each other)
 - Run session 4.4 after 4.2 completes (needs the populated airfield database)
 - Run session 4.5 after 4.2 completes (extends the database; can run in parallel with 4.4)
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+

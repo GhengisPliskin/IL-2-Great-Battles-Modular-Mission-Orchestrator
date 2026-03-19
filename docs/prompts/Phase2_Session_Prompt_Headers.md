@@ -34,7 +34,8 @@ Tasks 2.1 and 2.2 are Tier 1 (Opus 4.6) — the MRE must recognize and validate 
 |---|---|
 | **Task ID** | 2.1 |
 | **Component** | Module Reverse Engineer (`src/backend/mre/`) |
-| **Model Tier** | Tier 1 — Opus 4.6 / Gemini 3.1 Pro |
+| **Model Tier** | Tier 1 |
+| **Assigned Model** | Opus 4.6 / Gemini 3.1 Pro |
 | **Depends On** | 0.2 (parser library — reads .Group ASCII), 0.4 (MCU type catalog — required field definitions) |
 | **Delivers To** | 2.2 (validation corpus — MRE output is one side of the diff) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `src/backend/mre/`, FMEA Constraints table (all 14 constraints are detection targets) |
@@ -57,6 +58,9 @@ The constraint validation capability is the MRE's most architecturally significa
 > - Section 4.2: Entity proxy binding rules (MRE must detect and validate)
 > - Section 5.2: Magazine Array pattern (MRE must recognize Activate/Deactivate vs. Spawn)
 > - Section 5.3: GC chain structure (MRE must detect dual-path vs. single-path)
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -138,6 +142,25 @@ python -m backend.mre.cli audit path/to/file.group   # constraint check only
 > - Unrecognized MCU structures are preserved in the output (not silently dropped)
 > - CLI runs and produces a valid JSON audit report
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 2.2 — Validation Corpus
@@ -146,7 +169,8 @@ python -m backend.mre.cli audit path/to/file.group   # constraint check only
 |---|---|
 | **Task ID** | 2.2 |
 | **Component** | MRE + Compiler (`src/backend/mre/`, `src/mmf/compiler/`) |
-| **Model Tier** | Tier 1 — Opus 4.6 / Gemini 3.1 Pro |
+| **Model Tier** | Tier 1 |
+| **Assigned Model** | Opus 4.6 / Gemini 3.1 Pro |
 | **Depends On** | 1.10 (compiler — produces .Group from JSON), 2.1 (MRE — produces JSON from .Group), 2.1h (hand-built .Group files — the reference corpus) |
 | **Delivers To** | Phase 3 (module types — validated compiler patterns), 2.5 (GUI compile wiring — confidence that compiler is correct) |
 | **Reference** | See `ARCHITECTURE.md` — all FMEA Constraints active as detection targets; Phase Mapping → Phase 2; Directory Structure → `src/backend/mre/` and `src/mmf/compiler/` |
@@ -172,6 +196,9 @@ The validation corpus is the safety net. A compiler that passes its unit tests b
 > - Section 6.1: Initial Validation Prototype — Static CAP description (primary comparison target)
 > - Section 2.1: JSON Intermediary — the schema is the contract between MRE extraction and compiler input
 > - Section 2.2: Syntax Agnosticism — format differences (whitespace, ordering) are not semantic errors
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -244,6 +271,25 @@ Generate pytest fixtures from the corpus results. Each hand-built file that prod
 > - Corpus summary report is generated as JSON
 > - Regression test fixtures are generated for all EQUIVALENT and COMPILER_BUG cases
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 2.3 — GUI Shell
@@ -252,7 +298,8 @@ Generate pytest fixtures from the corpus results. Each hand-built file that prod
 |---|---|
 | **Task ID** | 2.3 |
 | **Component** | GUI (`src/ui/gui/`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 0.5 (JSON schema — defines the form structure the GUI must produce) |
 | **Delivers To** | 2.4 (Static CAP form), 2.5 (compile wiring), 2.6 (AI cap display) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `src/ui/gui/`, Phase Mapping → Phase 2 |
@@ -271,6 +318,9 @@ Phase 2 builds the shell and the first module form (Static CAP). Phase 3 adds ad
 > - Section 2.1: JSON Intermediary — the GUI outputs this; the schema is the interface contract
 > - Section 1: Project Objective — "UI-driven generation tool"
 > - `ARCHITECTURE.md` → `src/ui/gui/` directory structure: `main_window.py`, `module_editor.py`, `schema_widgets.py`, `compiler_output.py`, `dialogs/`
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -323,6 +373,25 @@ A dockable output panel (`compiler_output.py`) that displays:
 > - "Compile" button is present and wired to a placeholder (actual wiring is task 2.5)
 > - New module type can be added by subclassing `ModuleFormBase` and registering — no main_window changes
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 2.4 — Static CAP Parameter Form
@@ -331,7 +400,8 @@ A dockable output panel (`compiler_output.py`) that displays:
 |---|---|
 | **Task ID** | 2.4 |
 | **Component** | GUI (`src/ui/gui/module_editor.py`, `src/ui/gui/schema_widgets.py`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 2.3 (GUI shell — provides the form framework and registry) |
 | **Delivers To** | 2.5 (compile wiring — the form produces the JSON payload the compiler consumes), 2.6 (AI cap display — reads flight_size and wave_count from this form) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `src/ui/gui/`; FMEA Constraints → EL-001 (wave count validation), EC-004 (AI cap display) |
@@ -351,6 +421,9 @@ The session formula validation (EL-001) and the AI cap warning (EC-004) are the 
 > - [EC-004] HIGH — `max_concurrent_AI = flight_size × max_simultaneous_waves`. GUI warns if > 80. (Display implementation is task 2.6; form must expose the underlying field values.)
 > - Section 5.2.2: Counter Behavior & Session Sizing — wave count formula
 > - JSON schema `modules[].flight`, `modules[].magazine`, `modules[].waypoints`, `modules[].attack` property definitions
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -423,6 +496,25 @@ These are the coordinates where the module's I/O proxy nodes will appear in BOSE
 > - Waypoint table supports add/remove and produces a valid `waypoints.points[]` array
 > - Empty `attack.targets` triggers a PI-001 validation error on export
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 2.5 — JSON Export + Compile Wiring
@@ -431,7 +523,8 @@ These are the coordinates where the module's I/O proxy nodes will appear in BOSE
 |---|---|
 | **Task ID** | 2.5 |
 | **Component** | GUI (`src/ui/gui/main_window.py`, `src/ui/gui/compiler_output.py`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 2.4 (Static CAP form — produces the JSON payload), 1.10 (compiler — consumes the JSON payload and emits .Group) |
 | **Delivers To** | 2.5h (in-game test — the GUI-compiled .Group is what gets flown) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `src/ui/gui/`, `src/mmf/compiler/`; FMEA Constraints → PI-002 (reserved-char filter at export) |
@@ -450,6 +543,9 @@ The end-to-end workflow is: GUI → JSON → Compiler → .Group → BOSEditor. 
 > - [PI-002] HIGH — Reserved-character filter: `{}[];="` stripped from all string fields. The compiler applies its own filter, but the GUI must also sanitize before export to prevent schema validation failures on strings containing reserved characters.
 > - Section 2.1: JSON Intermediary — the GUI outputs the JSON contract; the compiler consumes it
 > - Section 3.1: Compiler Validation — PI-001 required-field checks happen compiler-side; GUI displays the result
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -520,6 +616,25 @@ On successful compilation:
 > - "Export JSON" produces a valid, sanitized JSON file
 > - End-to-end: GUI → Compile → BOSEditor import succeeds (verified at 2.5h)
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 2.6 — Calculated AI Cap Display
@@ -528,7 +643,8 @@ On successful compilation:
 |---|---|
 | **Task ID** | 2.6 |
 | **Component** | GUI (`src/ui/gui/module_editor.py`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 2.4 (Static CAP form — provides the flight_size and wave_count values) |
 | **Delivers To** | Phase 3 (module type forms inherit this display), 2.5h (AI cap warning visible during test configuration) |
 | **Reference** | See `ARCHITECTURE.md` — FMEA Constraints → EC-004; Directory Structure → `src/ui/gui/` |
@@ -546,6 +662,9 @@ The calculation is straightforward: `max_concurrent_AI = flight_size × max_simu
 > **Relevant MMF Spec Rev 2 / FMEA Constraints**
 > - [EC-004] HIGH — GUI SHALL calculate and display: `max_concurrent_AI = flight_size × max_simultaneous_waves`. GUI SHALL warn if this value exceeds 80. GC-gated activation prevents actual cap breach at runtime, but the designer must see the theoretical worst case at design time.
 > - Section 5.2.3: GC-Gated Wave Activation — the ~100 AI cap and the reason for the warning threshold
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -598,6 +717,25 @@ The display must update immediately (no lag, no manual refresh) when:
 > - Warning message disappears when value drops to ≤80
 > - Tooltip shows the formula with current values
 > - Widget accepts a list of modules (future multi-module support)
+
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
 
 ---
 

@@ -195,9 +195,9 @@ cython_debug/
 .abstra/
 
 # Visual Studio Code
-#   Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore 
+#   Visual Studio Code specific template is maintained in a separate VisualStudioCode.gitignore
 #   that can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
-#   and can be added to the global gitignore or merged into this file. However, if you prefer, 
+#   and can be added to the global gitignore or merged into this file. However, if you prefer,
 #   you could uncomment the following to ignore the entire vscode folder
 # .vscode/
 
@@ -214,3 +214,23 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# =============================================================================
+# IL-2 MMO — Project-Specific
+# =============================================================================
+
+# IL-2 Mission Editor reference manual (large binary — do not commit)
+docs/IL-2_Sturmovik_Mission_Editor_Manual.pdf
+
+# User-specific IL-2 installation path (machine-local, never shared)
+config/il2_paths.yaml
+
+# Reference .group/.mission corpus (binary IL-2 files — large, machine-local)
+# Populated during Phase 0.1. Add files manually; do not commit.
+tests/fixtures/il2_files/
+
+# Phase 4 map database output (generated, large SQLite binary)
+data/map_databases/maps.sqlite3
+
+# Phase 6 distribution output
+build/dist/

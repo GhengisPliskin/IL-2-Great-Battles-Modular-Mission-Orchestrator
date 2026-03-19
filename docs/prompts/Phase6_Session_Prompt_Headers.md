@@ -42,7 +42,8 @@ Phase 5 (5.5 Orchestrator GUI — complete, tested)
 |---|---|
 | **Task ID** | 6.1 |
 | **Component** | Distribution (`build/pyinstaller/`, `build/dist/`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 5.5 (complete Orchestrator GUI — the application entry point being packaged) |
 | **Delivers To** | 6.4 (community beta — the executable users will download and test) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `build/pyinstaller/`, `build/dist/`, `data/`, `config/` |
@@ -61,6 +62,9 @@ PyInstaller's hidden import detection frequently misses dynamically loaded modul
 > - Section 1: Project Objective — Python UI and Logic Matrix Generator; the packaged executable is the end-user delivery of this objective
 > - Section 2: Architectural Design Principles — three-layer architecture; all three layers must be present in the bundle
 > - All FMEA constraints (PI-001 through EC-004) are embedded in the bundled compiler code; no constraints require runtime modification, but all constrained modules must be importable from the frozen executable
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -138,6 +142,25 @@ The build script must include a post-build smoke test:
 > - All map databases, module templates, and default configs are accessible from the frozen executable
 > - Executable size is documented in the build output
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 6.2 — User Documentation
@@ -146,7 +169,8 @@ The build script must include a post-build smoke test:
 |---|---|
 | **Task ID** | 6.2 |
 | **Component** | Documentation (`docs/USER_GUIDE.md`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 5.5 (complete Orchestrator GUI — must document the final interface, not a prototype) |
 | **Delivers To** | 6.4 (community beta — this is the document users follow during testing) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `docs/USER_GUIDE.md` |
@@ -167,6 +191,9 @@ The documentation must accurately describe constraint-driven behavior that affec
 > - Section 5: Garbage Collection — describes the wave cycling behavior users will observe in-game
 > - Section 6: Initialization — describes the startup delay users will observe
 > - FMEA constraints EC-001 (init delay), EC-004 (AI cap), EL-001 (wave cycling) — these manifest as user-visible behavior
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -232,6 +259,25 @@ Document the most likely failure modes a user will encounter:
 > - Troubleshooting section covers the top 5 user-reported issues from Phase 5 testing (5.2h, 5.5h, 5.6h)
 > - Document is written in Markdown, stored at `docs/USER_GUIDE.md`
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 6.3 — Contributor Documentation
@@ -240,7 +286,8 @@ Document the most likely failure modes a user will encounter:
 |---|---|
 | **Task ID** | 6.3 |
 | **Component** | Documentation (`docs/CONTRIBUTOR_GUIDE.md`, `docs/API_REFERENCE.md`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 5.5 (complete Orchestrator — the full codebase must be stable before documenting its extension points) |
 | **Delivers To** | 6.4 (community beta — contributors during beta need this to add modules and maps) |
 | **Reference** | See `ARCHITECTURE.md` — this document is the authoritative architecture reference; the contributor guide extends it for external developers |
@@ -261,6 +308,9 @@ However, contributors must understand the FMEA constraints that govern what the 
 > - Section 3: Module Architecture — the template structure contributors will extend
 > - All FMEA constraints (PI-001 through EC-004) — contributors must understand the constraints their modules inherit
 > - `ARCHITECTURE.md` — the directory structure and import conventions contributors must follow
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -336,6 +386,25 @@ Generate or write `docs/API_REFERENCE.md` covering the public interfaces a contr
 > - The FMEA constraint quick reference accurately summarizes all 14 constraints with correct severity ratings
 > - The API reference documents every public function a contributor would call
 > - Documents are written in Markdown: `docs/CONTRIBUTOR_GUIDE.md` and `docs/API_REFERENCE.md`
+
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
 
 ---
 

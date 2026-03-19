@@ -429,6 +429,7 @@ class Parser:
                 return {
                     'type': block_type,
                     'rows': rows,
+                    'separator': ':',
                     'preceding_comments': preceding_comments,
                     'blank_lines_before': blank_lines,
                 }
@@ -439,6 +440,7 @@ class Parser:
             return {
                 'type': block_type,
                 'rows': rows,
+                'separator': ',',
                 'preceding_comments': preceding_comments,
                 'blank_lines_before': blank_lines,
             }

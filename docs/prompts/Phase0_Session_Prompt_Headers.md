@@ -73,7 +73,8 @@ The corpus must include diversity across:
 |---|---|
 | **Task ID** | 0.2 |
 | **Component** | Parser library (`src/mmf/parser/`) |
-| **Model Tier** | Tier 1 — Opus 4.6 / Gemini 3.1 Pro |
+| **Model Tier** | Tier 1 |
+| **Assigned Model** | Opus 4.6 / Gemini 3.1 Pro |
 | **Depends On** | 0.1 (reference file corpus in working directory) |
 | **Delivers To** | 0.3 (writer), 0.4 (catalog), 1.x (all compiler tasks) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `src/mmf/parser/`, Phase Mapping, FMEA Constraints |
@@ -91,6 +92,9 @@ IL-2 Great Battles .Mission and .Group files are structured in a proprietary ASC
 > - Section 2.1: JSON Intermediary — parser output feeds the intermediate JSON representation
 > - Section 2.2: Syntax Agnosticism — parser must isolate the IL-2 format so changes require only compiler updates
 > - Appendix / MCU block syntax examples in any attached .Group reference files
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -141,6 +145,25 @@ The parser module SHALL be named `deserializer.py` within `src/mmf/parser/`, mat
 > - Parser module exists at `src/mmf/parser/deserializer.py`
 > - Unit tests exist at `src/mmf/parser/tests/test_parser.py`
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 0.3 — ASCII Writer
@@ -149,7 +172,8 @@ The parser module SHALL be named `deserializer.py` within `src/mmf/parser/`, mat
 |---|---|
 | **Task ID** | 0.3 |
 | **Component** | Parser library (`src/mmf/parser/`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 0.2 (parser — defines the dictionary structure to serialize) |
 | **Delivers To** | All compiler tasks (1.x) that write .Group files to disk |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `src/mmf/parser/`, Phase Mapping |
@@ -166,6 +190,9 @@ The parser (0.2) defines the canonical Python dictionary representation of IL-2 
 > - Section 2.1: JSON Intermediary — final output is IL-2 ASCII, not JSON; the writer is what produces it
 > - Section 2.2: Syntax Agnosticism — only the compiler mapping (which calls the writer) changes on IL-2 updates
 > - IL-2 .Group/.Mission file syntax: brace-delimited blocks, `=` assignment, semicolon terminators, bracket arrays
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -209,6 +236,25 @@ Implements constraint PI-002: strip reserved characters `{}[];="` from all strin
 > - PI-002 filter: string containing reserved chars is serialized with those chars stripped
 > - Indentation is consistent across all nesting levels
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 0.4 — MCU Type Catalog
@@ -217,7 +263,8 @@ Implements constraint PI-002: strip reserved characters `{}[];="` from all strin
 |---|---|
 | **Task ID** | 0.4 |
 | **Component** | Parser library (`src/mmf/parser/`), `data/mcu_catalog.json` |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 0.1 (corpus), 0.2 (parser to enumerate all MCU types) |
 | **Delivers To** | 1.8 (schema validator PI-001), 2.x (MRE), all compiler field validation |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `src/mmf/parser/`, FMEA Constraints table |
@@ -234,6 +281,9 @@ The IL-2 engine uses Mission Control Units (MCUs) as the node primitives for all
 > - Section PI-001: Required Field Schema Validator — catalog is the schema source
 > - Section 3 (MCU types and field definitions) — cross-reference against the corpus
 > - FMEA constraints EL-001, EL-002, EL-003 — these reference specific MCU fields (Counter Reset, Entity binding)
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -273,6 +323,25 @@ Flag the following with their FMEA constraint IDs in the `constraints` field:
 > - Catalog loads as valid JSON and passes jsonschema validation against a provided meta-schema
 > - A script enumerating corpus MCU types produces zero types missing from catalog
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 0.5 — JSON Schema Contract
@@ -281,7 +350,8 @@ Flag the following with their FMEA constraint IDs in the `constraints` field:
 |---|---|
 | **Task ID** | 0.5 |
 | **Component** | Schema (`src/mmf/schema/`) |
-| **Model Tier** | Tier 1 — Opus 4.6 / Gemini 3.1 Pro |
+| **Model Tier** | Tier 1 |
+| **Assigned Model** | Opus 4.6 / Gemini 3.1 Pro |
 | **Depends On** | None (independent — defines the interface) |
 | **Delivers To** | 0.5h (human approval gate), then all Phase 1+ compiler and GUI tasks |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `src/mmf/schema/`, FMEA Constraints table |
@@ -304,6 +374,9 @@ The existing `mmf-module-schema-v2_0.json` is provided as a starting point. Revi
 > - Section PI-002: Reserved-character filter applies at compiler side, not schema side
 > - Section PI-001: Required Field validator — schema is the source of required field definitions
 > - FMEA constraints referenced by module types: EL-001, EL-002, EL-003, SM-001–004, PI-001–004
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -349,6 +422,25 @@ Schema must validate against JSON Schema Draft 7. Use `$schema: http://json-sche
 > - Schema is approved by project owner (human gate 0.5h) before Phase 1 begins
 > - New module type can be added via a non-breaking schema extension (additive only)
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Human Gate 0.5h — JSON Schema Approval
@@ -390,7 +482,8 @@ Record approval date before Phase 1 begins. If the schema requires changes, retu
 |---|---|
 | **Task ID** | 0.6 |
 | **Component** | Project scaffolding (`src/` root package) |
-| **Model Tier** | Tier 3 — Haiku 4.5 / Gemini 3.1 Flash-Lite |
+| **Model Tier** | Tier 3 |
+| **Assigned Model** | Haiku 4.5 / Gemini 3.1 Flash-Lite |
 | **Depends On** | None (can run in parallel with 0.5) |
 | **Delivers To** | All sessions — provides the importable package structure every component uses |
 | **Reference** | See `ARCHITECTURE.md` — this is the authoritative directory specification; scaffold exactly what it defines |
@@ -406,6 +499,9 @@ The entire MMF project is Python. All components share the `mmf/` root namespace
 > **Relevant MMF Spec Rev 2 Sections**
 > - Section 2: Architectural Design Principles — three-layer architecture: parser base, tool suite middle, applications top
 > - Section 1: Project Objective — Python UI and Logic Matrix Generator; no language migration
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Required Directory Structure
 
@@ -447,6 +543,12 @@ python -c "from mmf.parser import deserializer; from mmf.compiler import compile
 > - `src/mmf/schema/` directory exists with placeholder for `mmf-module-schema-v2_0.json`
 > - `data/` directory exists with placeholder for `mcu_catalog.json`
 > - `pyproject.toml` present with correct package metadata
+
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
 
 ---
 

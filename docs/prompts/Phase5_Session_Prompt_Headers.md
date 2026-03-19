@@ -62,7 +62,8 @@ Phase 1 (1.10 Compiler) + Phase 3 (Module Types) + Phase 4 (4.2 Map DB, 4.3 Fron
 |---|---|
 | **Task ID** | 5.1 |
 | **Component** | Orchestrator (`src/backend/orchestrator/mission_builder.py`) |
-| **Model Tier** | Tier 1 — Opus 4.6 / Gemini 3.1 Pro |
+| **Model Tier** | Tier 1 |
+| **Assigned Model** | Opus 4.6 / Gemini 3.1 Pro |
 | **Depends On** | 1.10 (working compiler + all primitives), 4.2 (validated map database with airfield coordinates) |
 | **Delivers To** | 5.2 (player spawn layer), 5.3 (scenario templates), 5.5 (GUI), 5.6 (batch generation) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `src/backend/orchestrator/`, Phase Mapping → 5.1–5.3, FMEA Constraints (full set) |
@@ -85,6 +86,9 @@ The compiler (Phase 1) already handles per-module constraint enforcement. The as
 > - [PI-003] CRITICAL — Single monotonic counter per compilation session; mission-level assembly is a single session even if it contains 10+ modules
 > - [EC-001] MEDIUM — Master Core initialization delay configurable (default 3s, range 3–10s); warn if >200 Enabled=FALSE entities with delay <5s
 > - [EC-004] HIGH — Total max_concurrent_AI = sum of all modules' (flight_size × max_simultaneous_waves); warn if >80
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -161,6 +165,25 @@ class MissionBuilder:
 > - Spatial offset zones are unique per module — no remote coordinate overlap
 > - Unit tests: merge 3+ modules, verify ID uniqueness, verify spatial isolation, verify coalition assignment
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 5.2 — Player Spawn Management
@@ -169,7 +192,8 @@ class MissionBuilder:
 |---|---|
 | **Task ID** | 5.2 |
 | **Component** | Orchestrator (`src/backend/orchestrator/mission_builder.py`) |
-| **Model Tier** | Tier 1 — Opus 4.6 / Gemini 3.1 Pro |
+| **Model Tier** | Tier 1 |
+| **Assigned Model** | Opus 4.6 / Gemini 3.1 Pro |
 | **Depends On** | 5.1 (mission assembly engine), 4.2 (validated airfield database with spawn positions) |
 | **Delivers To** | 5.2h (DServer MP test), 5.3 (scenario templates use player spawns) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `src/backend/orchestrator/`, Phase Mapping → 5.1–5.3 |
@@ -190,6 +214,9 @@ The airfield database from Phase 4 provides coordinates, runway headings, and sp
 > - [PI-003] CRITICAL — Airfield objects, spawn points, and plane set entities all receive IDs from the shared monotonic counter
 > - [PI-001] CRITICAL — Airfield and spawn MCU blocks have required fields; null or empty arrays abort compilation
 > - IL-2 Mission Editor Manual: Airfield objects (pg. 109–112), Multiplayer spawn configuration
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -253,6 +280,25 @@ When `output_mode == 'mission'` with MP configuration:
 > - All airfield and spawn IDs are unique and drawn from the shared counter
 > - No null or empty required fields in airfield/spawn blocks (PI-001 validated)
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Human Gate 5.2h — DServer Multiplayer Test
@@ -293,7 +339,8 @@ Document the test results before task 5.3 begins. For each verification item: PA
 |---|---|
 | **Task ID** | 5.3 |
 | **Component** | Orchestrator (`src/backend/orchestrator/scenario_engine.py`) |
-| **Model Tier** | Tier 1 — Opus 4.6 / Gemini 3.1 Pro |
+| **Model Tier** | Tier 1 |
+| **Assigned Model** | Opus 4.6 / Gemini 3.1 Pro |
 | **Depends On** | 5.1 (mission assembly engine), 5.2 (player spawn management), 4.3 (front-line reference data) |
 | **Delivers To** | 5.4 (ambient AI), 5.5 (GUI — scenario type selector), 5.6 (batch generation) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `src/backend/orchestrator/`, Phase Mapping → 5.1–5.3, FMEA Constraints (full set) |
@@ -317,6 +364,9 @@ Five scenario templates are required: Intercept (fighters defend against incomin
 > - [EL-001] CRITICAL — wave_count per module must be validated against session_duration / ToS; the scenario template sets these parameters
 > - [EC-001] MEDIUM — Initialization delay scaled to total entity count; complex scenarios with many modules need higher delays
 > - [PI-004] MEDIUM — Each module in the scenario receives a unique spatial offset; the scenario engine must not place two modules in the same remote zone
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -419,6 +469,25 @@ Before passing the assembled module configuration to `MissionBuilder.build()`:
 > - No spatial offset collisions between modules in the generated mission
 > - Difficulty scaling produces measurably different missions: easy has fewer flights, hard has more
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 5.4 — Ambient AI
@@ -427,7 +496,8 @@ Before passing the assembled module configuration to `MissionBuilder.build()`:
 |---|---|
 | **Task ID** | 5.4 |
 | **Component** | Orchestrator (`src/backend/orchestrator/scenario_engine.py`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 5.3 (scenario templates — ambient AI is layered on top of the scenario's core modules) |
 | **Delivers To** | 5.5 (GUI exposes ambient AI density controls), 5.5h (in-game test includes ambient AI) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `src/backend/orchestrator/` |
@@ -445,6 +515,9 @@ The critical constraint is AI slot consumption. Ambient AI modules must fit with
 > **Relevant MMF Spec Rev 2 / FMEA Constraints**
 > - [EC-004] HIGH — Ambient AI modules are added AFTER core scenario modules. The ambient layer receives a remaining AI budget = 80 - core_ai_load. Ambient modules must not exceed this budget.
 > - [EC-001] MEDIUM — Additional ambient modules increase the total Enabled=FALSE entity count, potentially requiring a higher initialization delay.
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -501,6 +574,25 @@ Ambient AI is layered on top of the scenario template's output. The integration 
 > - Ambient modules use the shared IDGenerator and spatial offset engine — no collisions with core modules
 > - Unit tests: with a core AI load of 60, ambient layer allocates at most 20 units of ambient AI
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Session 5.5 — Orchestrator GUI
@@ -509,7 +601,8 @@ Ambient AI is layered on top of the scenario template's output. The integration 
 |---|---|
 | **Task ID** | 5.5 |
 | **Component** | Orchestrator GUI (`src/ui/gui/`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 5.3 (scenario engine — GUI drives the template system), 2.3 (PyQt6 GUI framework from Phase 2) |
 | **Delivers To** | 5.5h (in-game test — missions generated via GUI), 5.6 (DServer rotation — batch mode shares the same generation pipeline) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `src/ui/gui/`, Phase Mapping |
@@ -527,6 +620,9 @@ The Phase 2 GUI framework (task 2.3) established the PyQt6 application structure
 > **Relevant MMF Spec Rev 2 Sections**
 > - Section 1: Project Objective — UI-driven generation tool
 > - [EC-004] HIGH — GUI SHALL calculate and display max_concurrent_AI, warn if >80
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -583,6 +679,25 @@ Single "Generate Mission" button that:
 > - Generated .Mission file loads in DServer and is flyable (verified in 5.5h)
 > - Error states display actionable diagnostics — no silent failures
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Human Gate 5.5h — In-Game Flight Test
@@ -628,7 +743,8 @@ Document the test results per mission. For each: map name, scenario type, diffic
 |---|---|
 | **Task ID** | 5.6 |
 | **Component** | Orchestrator (`src/backend/orchestrator/dserver_interface.py`) |
-| **Model Tier** | Tier 2 — Sonnet 4.6 / Gemini 3 Flash |
+| **Model Tier** | Tier 2 |
+| **Assigned Model** | Sonnet 4.6 / Gemini 3 Flash |
 | **Depends On** | 5.5 (GUI — the rotation system uses the same generation pipeline) |
 | **Delivers To** | 5.6h (DServer stability test), 5.7 (inter-mission state feedback reads DServer logs) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `src/backend/orchestrator/`, IL-2 DServer SDS configuration reference |
@@ -647,6 +763,9 @@ The key risk is mission transition stability. When the DServer loads a new missi
 > - [EL-001] CRITICAL — Each mission in the rotation is a fresh Magazine Array; counters are NOT reused across rotation cycles (single-use sequential dispenser)
 > - [EC-004] HIGH — Each mission independently enforces the AI cap; rotation does not accumulate AI across missions
 > - Section 5: Tickrate Optimization — each mission in the rotation targets 180 minutes of stable DServer performance
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -705,6 +824,25 @@ mmf-rotate --live --maps stalingrad --difficulty random --sds /path/to/SDS.txt
 > - CLI interface: `mmf-rotate --count 10` produces 10 varied missions in the output directory
 > - Unit tests: batch of 5 missions, verify all load in DServer, verify SDS file is well-formed
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
 ---
 
 ## Human Gate 5.6h — DServer Rotation Stability Test
@@ -745,7 +883,8 @@ Document: total runtime, number of mission transitions observed, SPS range (min/
 |---|---|
 | **Task ID** | 5.7 |
 | **Component** | Orchestrator (`src/backend/orchestrator/dserver_interface.py`) |
-| **Model Tier** | Tier 1 — Opus 4.6 / Gemini 3.1 Pro |
+| **Model Tier** | Tier 1 |
+| **Assigned Model** | Opus 4.6 / Gemini 3.1 Pro |
 | **Depends On** | 5.6 (DServer rotation — feedback requires a running rotation to read logs from) |
 | **Delivers To** | Phase 6 (distribution — state feedback is the capstone feature of the Orchestrator) |
 | **Reference** | See `ARCHITECTURE.md` — Directory Structure → `src/backend/orchestrator/`, DServer log format |
@@ -766,6 +905,9 @@ This is Tier 1 because the feedback loop introduces state across missions — a 
 > - [EL-001] CRITICAL — Each mission is a fresh compilation session. State feedback modifies PARAMETERS, not compiled state. Magazine Arrays, counters, and GC chains are regenerated from scratch — feedback adjusts wave_count, flight_size, and AI_skill, not internal MCU state.
 > - [EC-004] HIGH — Feedback-driven parameter increases (more waves, larger flights) must still respect the AI cap. The feedback system must recalculate the aggregate AI load after applying modifiers and cap any increases that would breach the threshold.
 > - Section 5: Tickrate Optimization — feedback must not cause the AI load to drift upward over multiple cycles; a balancing mechanism is required.
+>
+> **Ground Rule 8 applies:** These constraints are immutable during execution.
+> If a constraint is logically impossible, HALT and invoke Ground Rule 9.
 
 ### Inputs
 
@@ -849,6 +991,12 @@ In live regeneration mode (5.6 R4):
 > - Unit tests: mock DServer log → parse → aggregate → compute modifiers → verify modifier values and AI cap compliance
 > - Integration test: run 3 consecutive missions with feedback, verify difficulty trend matches outcome trend
 
+### Ground Rule Compliance
+
+- **Issue Binding:** This task is bound to Issue #[TBD].
+- **Decision Logging:** Update `CODE_DECISION_LOG.md` with any structural code decisions made during this session.
+- **State Sync:** Move Kanban card from Ready → In Progress at start; In Progress → In Review at completion.
+
 ---
 
 ## Recommended Execution Sequence
@@ -876,3 +1024,16 @@ In live regeneration mode (5.6 R4):
 ```
 
 Tasks 5.4 and 5.5 can run in parallel — they have no interdependency. All other tasks are strictly sequential. The three human gates are positioned at integration boundaries: after basic MP functionality (5.2h), after full mission generation (5.5h), and after automated rotation (5.6h). Each gate catches integration errors before they propagate to the next complexity layer.
+### Execution Sequence & Two-Phase Commit
+
+**PHASE 1: Execution**
+1. Generate or modify the required code files per the Requirements above.
+2. Output the exact string: `[AWAITING_HUMAN_APPROVAL: Code generation complete. Please test and verify.]`
+3. HALT completely. Do not proceed to Phase 2.
+
+**PHASE 2: Documentation (Execute ONLY after human replies "Approved")**
+1. Audit the final, approved code against the current FMEA constraints.
+2. Generate the required `CODE_DECISION_LOG.md` entry.
+3. Generate an `ARCHITECTURE_PATCH.md` if structural drift occurred.
+4. Output the final Kanban board state change.
+
