@@ -334,11 +334,23 @@ WIP limits to project scale.
 Issues labeled `spike` are prohibited from moving to "Done." They may only reach
 "Done" after a linked formalization issue is created and itself reaches "In Review."
 
+Enforcement is two-layer:
+
+**Layer 1 — GitHub Project Automation (visual friction)**
+In the GitHub Projects UI under "Workflows":
+- Trigger: Item moved to "Done" with label `spike`
+- Action: Move back to "In Review"
+
+**Layer 2 — GitHub Actions CI check (hard enforcement)**
+Defined in `.github/workflows/spike-check.yml`. Triggers on `issues.closed`.
+Re-opens the issue and posts a comment if no linked formalization issue is found.
+
 ### Automation Rules
 - When PR is opened → move card to "In Review"
 - When PR is merged → move card to "Done"
 - When issue is labeled `blocked` → move card to "Blocked"
-- When issue is labeled `spike` → enforce Done-lock (manual or CI check)
+- When issue has label `spike` and moves to "Done" → move back to "In Review" (Layer 1)
+- When issue with label `spike` is closed without linked formalization issue → re-open and comment (Layer 2)
 
 ### Labels
 - **Component labels:** [one per major subsystem, e.g., `comp:api`, `comp:frontend`]
@@ -377,6 +389,11 @@ Keep it short. Details live in the documents they belong to.
 | [`docs/KANBAN_SETUP.md`](docs/KANBAN_SETUP.md) | Project board configuration |
 | [`docs/FMEA.md`](docs/FMEA.md) | Failure Mode and Effects Analysis register |
 | [`docs/[project]-master-plan.md`](docs/[project]-master-plan.md) | Full project plan, ground rules, task registry |
+
+## Automation
+
+This repo includes GitHub Actions and Project automation for Kanban enforcement.
+See [`docs/KANBAN_SETUP.md`](docs/KANBAN_SETUP.md) for setup steps and workflow details.
 
 ## Ground Rules
 

@@ -53,6 +53,10 @@ il2-mmo/
 ├── pyproject.toml               # Python project metadata
 ├── .gitignore                   # Git ignore patterns
 │
+├── .github/
+│   └── workflows/
+│       └── spike-check.yml      # Spike Done-Lock enforcement (Ground Rule 7)
+│
 └── working/                     # Ephemeral per-session scratch space
     └── CODE_DECISIONS_PATCH.md  # Provisional decisions — merged into CODE_DECISION_LOG.md at HUMAN gate
 ```

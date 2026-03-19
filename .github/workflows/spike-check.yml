@@ -1,0 +1,67 @@
+name: Spike Done-Lock
+
+on:
+  issues:
+    types: [closed]
+
+jobs:
+  spike-check:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'spike')
+
+    steps:
+      - name: Check for linked formalization issue
+        id: check
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issueNumber = context.issue.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // Fetch the issue body and timeline events
+            const issue = await github.rest.issues.get({
+              owner, repo, issue_number: issueNumber
+            });
+
+            const timeline = await github.rest.issues.listEventsForTimeline({
+              owner, repo, issue_number: issueNumber, per_page: 100
+            });
+
+            // Look for a cross-referenced issue that is open or closed (In Review or Done)
+            const linkedIssues = timeline.data
+              .filter(e => e.event === 'cross-referenced' && e.source?.issue)
+              .map(e => e.source.issue);
+
+            // Check if any linked issue is NOT the spike itself and is open or closed
+            // A formalization issue should reference this spike in its body
+            const formalizationFound = linkedIssues.some(linked => {
+              return linked.number !== issueNumber &&
+                     !linked.labels.some(l => l.name === 'spike');
+            });
+
+            if (!formalizationFound) {
+              // Re-open the issue
+              await github.rest.issues.update({
+                owner, repo, issue_number: issueNumber, state: 'open'
+              });
+
+              // Post a comment explaining why
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: issueNumber,
+                body: `## 🚫 Spike Done-Lock — Issue Re-opened\n\n` +
+                      `This issue is labeled \`spike\` and cannot be closed until a linked ` +
+                      `**formalization issue** exists and has reached **In Review** or later.\n\n` +
+                      `**Required steps before closing:**\n` +
+                      `1. Create a standard (non-spike) issue to formalize the code produced in this spike\n` +
+                      `2. Reference this spike issue in the formalization issue body (e.g. \`Formalizes #${issueNumber}\`)\n` +
+                      `3. Move the formalization issue to **In Review**\n` +
+                      `4. Then close this spike issue\n\n` +
+                      `_See Ground Rule 7 in the Master Project Plan for full details._`
+              });
+
+              core.setFailed('Spike issue closed without a linked formalization issue in In Review or later.');
+            } else {
+              console.log('Formalization issue found. Spike close approved.');
+            }

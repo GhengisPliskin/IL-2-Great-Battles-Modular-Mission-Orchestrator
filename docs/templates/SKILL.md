@@ -263,6 +263,7 @@ Generate each of these from the Master Plan.
 | `CODE_DECISION_LOG.md` | Initialize empty with template structure |
 | `docs/KANBAN_SETUP.md` | Board column definitions, WIP limits, automation rules |
 | `working/CODE_DECISIONS_PATCH.md` | Initialize empty with template structure — AI sessions write here during active development |
+| `.github/workflows/spike-check.yml` | Spike Done-Lock CI workflow — enforces Ground Rule 7 at issue close |
 
 **Conditional files** (generate only if confirmed in Step 0.1):
 
@@ -333,7 +334,10 @@ When the user is actively developing and returns for support:
    than directly rewriting ARCHITECTURE.md.
 
 8. **Kanban Maintenance**: Recommend priority re-ordering when new dependencies or
-   blockers emerge. Enforce the `spike` label constraint (Ground Rule 7).
+   blockers emerge. Enforce the `spike` label constraint (Ground Rule 7). The spike
+   Done-lock is enforced via two layers: GitHub Project Automation (visual, set up
+   in the Projects UI) and `.github/workflows/spike-check.yml` (hard enforcement
+   at issue close). See `docs/KANBAN_SETUP.md` for setup steps.
 
 9. **HUMAN Gate — Patch Merge Protocol**: When the user signs off that a phase passes
    all tests and is complete, perform the following merge sequence:

@@ -18,6 +18,10 @@ A Python toolchain for generating IL-2 Great Battles multiplayer missions from m
 | [`docs/FMEA.md`](docs/FMEA.md) | Failure Mode and Effects Analysis register |
 | [`docs/MMO_Master_Project_Plan.md`](docs/MMO_Master_Project_Plan.md) | Full project plan, ground rules, task registry |
 
+## Automation
+
+This repo includes GitHub Actions and Project automation for Kanban enforcement. See [`docs/KANBAN_SETUP.md`](docs/KANBAN_SETUP.md) for setup steps and workflow details.
+
 ## Ground Rules
 
 This project enforces 10 operational rules for traceability and safe AI-assisted development. See the [Master Plan](docs/MMO_Master_Project_Plan.md) for full details.

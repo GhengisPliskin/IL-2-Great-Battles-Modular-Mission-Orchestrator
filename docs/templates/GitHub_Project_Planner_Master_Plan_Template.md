@@ -100,6 +100,9 @@ their responsibilities, and how they communicate.]
 │   └── [additional docs]
 ├── working/                     # Ephemeral per-session scratch space
 │   └── CODE_DECISIONS_PATCH.md  # Provisional decisions — merged into CODE_DECISION_LOG.md at HUMAN gate
+├── .github/
+│   └── workflows/
+│       └── spike-check.yml      # Spike Done-Lock enforcement (Ground Rule 7)
 ├── ARCHITECTURE.md
 ├── CONSTRAINTS.md
 ├── KEY_DECISION_LOG.md
