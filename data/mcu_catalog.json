@@ -29,6 +29,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_CMD_AttackArea": {
@@ -73,6 +74,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_CMD_AttackTarget": {
@@ -109,6 +111,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_CMD_Behaviour": {
@@ -163,6 +166,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_CMD_Cover": {
@@ -199,6 +203,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_CMD_Damage": {
@@ -235,6 +240,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_CMD_Effect": {
@@ -269,6 +275,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_CMD_Flare": {
@@ -303,6 +310,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_CMD_ForceComplete": {
@@ -339,6 +347,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_CMD_Formation": {
@@ -375,6 +384,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_CMD_Land": {
@@ -409,6 +419,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_CMD_PlayAnimation": {
@@ -443,6 +454,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_CMD_TakeOff": {
@@ -477,6 +489,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_CheckZone": {
@@ -518,6 +531,7 @@
       "Zone": "int"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_Counter": {
@@ -554,6 +568,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": [
       "EL-001: Counter state persists through Deactivate \u2014 does NOT reset (C-014). Reset (Dropcount=0, Counter>=1) required in Magazine Array context to prevent counter saturation across respawn cycles. Counter must never be deactivated."
     ]
@@ -598,6 +613,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_Deactivate": {
@@ -630,6 +646,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_Delete": {
@@ -662,6 +679,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_Icon": {
@@ -708,6 +726,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_ModifierSetVal": {
@@ -750,6 +769,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_Proximity": {
@@ -789,6 +809,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_Spawner": {
@@ -823,6 +844,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_TR_AI_Poi": {
@@ -875,6 +897,9 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [
+      "Enabled"
+    ],
     "constraints": []
   },
   "MCU_TR_AnimationOperator": {
@@ -917,6 +942,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_TR_CameraOperator": {
@@ -968,6 +994,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_TR_ComplexTrigger": {
@@ -1065,6 +1092,10 @@
     "child_blocks": {
       "OnEvents": 265
     },
+    "multi_fields": [
+      "Country",
+      "Enabled"
+    ],
     "constraints": []
   },
   "MCU_TR_Entity": {
@@ -1104,6 +1135,7 @@
       "OnEvents": 6207,
       "OnReports": 697
     },
+    "multi_fields": [],
     "constraints": [
       "EL-002: Entity proxy binding fails silently if aircraft not yet physically instantiated. A 2-second post-Activate delay must precede any logic consuming the Entity's output events.",
       "EL-003: Two-way binding integrity: MisObjID on this MCU must equal the Index of the linked game object; LinkTrId on the game object must equal this MCU's Index. Post-emission assertion required."
@@ -1145,6 +1177,7 @@
     "child_blocks": {
       "Boundary": 47
     },
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_TR_MissionBegin": {
@@ -1179,6 +1212,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_TR_MissionEnd": {
@@ -1215,6 +1249,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_TR_MissionObjective": {
@@ -1257,6 +1292,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_TR_ServerInput": {
@@ -1291,6 +1327,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_TR_Subtitle": {
@@ -1329,6 +1366,7 @@
     "child_blocks": {
       "SubtitleInfo": 465
     },
+    "multi_fields": [],
     "constraints": []
   },
   "MCU_Timer": {
@@ -1365,6 +1403,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": [
       "SM-003: MCU_Timer.Deactivate pauses the timer; reactivation resumes from the paused position (does NOT reset). Timer reuse across state transitions is prohibited \u2014 allocate a fresh timer per logical state."
     ]
@@ -1405,6 +1444,7 @@
       "ZPos": "float"
     },
     "child_blocks": {},
+    "multi_fields": [],
     "constraints": []
   }
 }

@@ -36,6 +36,12 @@ Copy the four entries below verbatim into the appropriate section of `CODE_DECIS
 |---|----------|-----------|--------------------------|
 | D-22 | Added EL-002 to the FMEA overlay for `MCU_TR_Entity`. Session 0.4 R4 lists three constraints (EL-001, EL-003, SM-003); EL-002 is a scope expansion. Constraint text: Entity proxy binding fails silently if aircraft not yet physically instantiated — a 2-second post-Activate delay must precede any logic consuming the Entity's output events. | EL-002 is a HIGH-severity FMEA item that directly describes `MCU_TR_Entity` behavior. Omitting it from the catalog while including EL-003 (also `MCU_TR_Entity`) creates an incomplete picture of the same MCU type's failure modes. The catalog is the source of truth for PI-001 — if EL-002 isn't annotated here, the compiler has no reference for the temporal binding dependency. | If Phase 1 compiler omits the 2-second post-Activate timer: check whether the catalog entry for `MCU_TR_Entity` includes the EL-002 constraint string. If it's missing, the compiler author had no signal that this constraint existed. |
 
+### D-23
+
+| # | Decision | Rationale | If This Breaks, Check... |
+|---|----------|-----------|--------------------------|
+| D-23 | Added `multi_fields` list to each catalog entry. Build script tracks max occurrences of each field key per instance using `_count_field_occurrences_per_instance()`. Catalog exports `multi_fields` as a structural boolean list (field names where max > 1 in any instance), NOT raw integer counts. Raw max counts and provenance written to `logs/Corpus_Anomalies.md` cardinality diagnostics section only. | `compute_field_sets()` uses `set()` over field keys, which collapses duplicate keys (D-05 parser behavior) to a single entry. Without `multi_fields`, PI-001 has no signal that `Country` on `MCU_TR_ComplexTrigger` is a collection field that can appear 2–5 times in one block. Raw integer counts are NOT exported to the catalog because the corpus ceiling is a sampling artifact — IL-2 treats duplicate keys as logically unbounded. The structural boolean list (`multi_fields`) is the correct signal for PI-001. | If `multi_fields` is empty for a type known to have duplicate-key fields: check whether `_collect_from_blocks()` populates `field_instance_counts` on each instance record — that key is required by `compute_multi_fields()`. If `field_instance_counts` is missing (e.g., due to a schema change to instance records), `compute_multi_fields()` will silently return empty. If a new MCU type introduces duplicate keys in an expanded corpus: re-run `build_mcu_catalog.py` — detection is dynamic, not hardcoded. |
+
 ---
 
 ## Downstream Phase Coupling
@@ -48,3 +54,4 @@ These decisions affect the following downstream phases:
 | D-20 | Phase 0.4 re-runs (corpus expansion) | Re-run `build_mcu_catalog.py` when corpus is expanded. Review new anomaly entries before accepting updated catalog. |
 | D-21 | Phase 1 (PI-001 validator) | Typed list strings (`list[int]`) are the canonical field type representation. PI-001 validation logic must parse these strings. |
 | D-22 | Phase 1 (entity_proxy.py, command_buffer.py) | EL-002 is now in catalog. Phase 1 compiler must implement the 2-second post-Activate delay for MCU_TR_Entity consumers. |
+| D-23 | Phase 1 (PI-001 validator) | `multi_fields` list signals collection fields. PI-001 must treat `multi_fields` entries as allowing repeated key occurrence in a single block, not as validation errors. |

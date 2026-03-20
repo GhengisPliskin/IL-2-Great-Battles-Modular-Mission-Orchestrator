@@ -3,11 +3,13 @@ MODULE:  build_mcu_catalog
 PURPOSE: Corpus-driven generator and validator for data/mcu_catalog.json.
          Walks all .Group and .Mission files in the Phase 0.1 corpus, extracts
          every MCU type and its fields using the Phase 0.2 parser, computes
-         required/optional splits, resolves typed list field types, overlays
-         FMEA constraint annotations, validates against the catalog meta-schema,
-         and writes the finished catalog to data/mcu_catalog.json.
+         required/optional splits, resolves typed list field types, detects
+         duplicate-key fields (multi_fields, D-23), overlays FMEA constraint
+         annotations, validates against the catalog meta-schema, and writes the
+         finished catalog to data/mcu_catalog.json.
          Also writes logs/Corpus_Anomalies.md for human review of edge-case
-         fields at >90% but <100% corpus occurrence.
+         fields at >90% but <100% corpus occurrence and cardinality diagnostics
+         for fields with max duplicate-key occurrences > 1.
          Belongs to: Shared Foundation — data layer (Phase 0 tooling).
 FMEA:    EL-001 (MCU_Counter annotation), EL-002 (MCU_TR_Entity annotation),
          EL-003 (MCU_TR_Entity annotation), SM-003 (MCU_Timer annotation).
@@ -120,6 +122,27 @@ def collect_mcu_instances(corpus_dir: Path) -> tuple[dict, list[str]]:
     return dict(instances_by_type), consumed_files
 
 
+def _count_field_occurrences_per_instance(fields: list) -> dict[str, int]:
+    """
+    WHAT:    Counts how many times each key appears in a single MCU block's
+             fields list. Returns a dict of {field_name: occurrence_count}.
+    WHY:     The deserializer preserves duplicate keys as separate list entries
+             (D-05). compute_field_sets() uses set() which collapses them to
+             one entry per key, losing cardinality information. This function
+             captures per-instance key counts so compute_multi_fields() can
+             detect fields that appear more than once in any single block (D-23).
+    ARGS:
+        fields (list): List of (key, value) tuples from a parsed MCU block.
+    RETURNS:
+        dict[str, int]: e.g. {'Country': 3, 'Index': 1, 'Name': 1}
+    FMEA:    None
+    """
+    counts: dict[str, int] = defaultdict(int)
+    for k, _v in fields:
+        counts[k] += 1
+    return dict(counts)
+
+
 def _collect_from_blocks(
     blocks: list,
     source_file: str,
@@ -142,11 +165,15 @@ def _collect_from_blocks(
     for block in blocks:
         btype = block.get("type", "")
         if btype.startswith("MCU_"):
+            fields = block.get("fields", [])
             instances_by_type[btype].append(
                 {
-                    "fields": block.get("fields", []),
+                    "fields": fields,
                     "children": block.get("children", []),
                     "source_file": source_file,
+                    # Per-instance field occurrence counts for D-23 cardinality tracking.
+                    # Captured here while the original fields list is in scope.
+                    "field_instance_counts": _count_field_occurrences_per_instance(fields),
                 }
             )
         # --- RECURSE INTO CHILDREN ---
@@ -224,6 +251,57 @@ def compute_field_sets(instances: list[dict]) -> tuple[set, set, dict]:
             optional.add(field)
 
     return required, optional, field_stats
+
+
+# ===========================================================================
+# Multi-field (duplicate key) detection — D-23
+# ===========================================================================
+
+def compute_multi_fields(instances: list[dict]) -> tuple[list[str], dict[str, dict]]:
+    """
+    WHAT:    Identifies fields that appear more than once in any single corpus
+             instance of this MCU type. Returns a sorted list of multi-field
+             names and a cardinality stats dict for the anomaly log.
+    WHY:     compute_field_sets() uses set() over field keys, collapsing duplicate
+             keys (D-05 parser behaviour) to a single entry. Without multi_fields,
+             PI-001 has no signal that a field like Country is a collection field
+             that may appear 2–5 times in one block (D-23). The catalog entry
+             exports only the boolean list; raw max counts go to the anomaly log
+             because the corpus ceiling is a sampling artifact — IL-2 treats
+             duplicate keys as logically unbounded (D-23).
+    ARGS:
+        instances (list[dict]): List of MCU instance records from collect_mcu_instances.
+                                Each record must have 'field_instance_counts' populated
+                                by _count_field_occurrences_per_instance().
+    RETURNS:
+        tuple: (multi_field_names, cardinality_stats)
+               multi_field_names: sorted list[str] — fields with max count > 1
+               cardinality_stats: dict[str, dict] — {field_name: {max_count, files_with_duplicates}}
+                                  for anomaly log section only; NOT exported to catalog.
+    FMEA:    None
+    """
+    # WHY NOT export raw max counts to catalog: [D-23] — corpus ceiling is a
+    # sampling artifact; IL-2 treats duplicate keys as logically unbounded.
+    # Structural boolean list (present/absent in multi_fields) is the correct signal.
+    field_max: dict[str, int] = defaultdict(int)
+    field_dup_files: dict[str, list[str]] = defaultdict(list)
+
+    for inst in instances:
+        for field, count in inst.get("field_instance_counts", {}).items():
+            if count > field_max[field]:
+                field_max[field] = count
+            if count > 1:
+                field_dup_files[field].append(inst["source_file"])
+
+    multi_field_names = sorted(f for f, max_c in field_max.items() if max_c > 1)
+    cardinality_stats = {
+        f: {
+            "max_count": field_max[f],
+            "files_with_duplicates": sorted(set(field_dup_files[f])),
+        }
+        for f in multi_field_names
+    }
+    return multi_field_names, cardinality_stats
 
 
 # ===========================================================================
@@ -399,19 +477,27 @@ def build_anomaly_log(
     return anomalies
 
 
-def write_anomaly_log(anomalies: list[dict], output_path: Path, consumed_files: list[str]) -> None:
+def write_anomaly_log(
+    anomalies: list[dict],
+    output_path: Path,
+    consumed_files: list[str],
+    all_cardinality_stats: dict | None = None,
+) -> None:
     """
-    WHAT:    Writes logs/Corpus_Anomalies.md — a Markdown report listing every
-             field that appeared in >90% but <100% of corpus instances for its
-             MCU type, including provenance paths of files missing the field.
-    WHY:     Human-readable report required by D-20. Developers can cross-
-             reference provenance paths against known-faulty corpus members to
-             decide whether to promote the field to required or leave it as
-             optional. This decision must not be automated.
+    WHAT:    Writes logs/Corpus_Anomalies.md — a Markdown report with two sections:
+             (1) Fields at >90% but <100% occurrence (D-20 review required).
+             (2) Cardinality diagnostics: fields with max duplicate-key count > 1
+                 across any single instance, with raw max counts and provenance (D-23).
+    WHY:     Human-readable report required by D-20. Cardinality section added for
+             D-23 — raw max counts go here, NOT to the catalog, because the corpus
+             ceiling is a sampling artifact. Developers use this section to verify
+             that multi_fields classification is correct.
     ARGS:
         anomalies (list[dict]): Output of build_anomaly_log().
         output_path (Path): Destination file path (logs/Corpus_Anomalies.md).
         consumed_files (list[str]): All corpus files successfully parsed.
+        all_cardinality_stats (dict | None): Per-type cardinality stats from
+            build_catalog(). If None or empty, cardinality section is omitted.
     RETURNS:
         None
     FMEA:    None
@@ -468,6 +554,44 @@ def write_anomaly_log(anomalies: list[dict], output_path: Path, consumed_files: 
                 lines.append(f"  - `{path}`")
             lines.append("")
 
+    # --- CARDINALITY DIAGNOSTICS SECTION (D-23) ---
+    # Raw max counts are corpus artifacts and must NOT appear in the catalog.
+    # They belong here for developer verification that multi_fields is correct.
+    if all_cardinality_stats:
+        lines += [
+            "---",
+            "",
+            "## Cardinality Diagnostics — Duplicate-Key Fields (D-23)",
+            "",
+            "Fields listed here appeared more than once in at least one corpus instance",
+            "(duplicate keys, preserved by parser D-05). These fields are exported to",
+            "the catalog as `multi_fields` entries — a structural boolean flag only.",
+            "Raw max counts below are corpus sampling artifacts; IL-2 treats duplicate",
+            "keys as logically unbounded. **Do not promote max counts to the catalog.**",
+            "",
+            "| MCU Type | Field | Max Count (any instance) | Files With Duplicates |",
+            "|---|---|---|---|",
+        ]
+        for mcu_type in sorted(all_cardinality_stats.keys()):
+            for field in sorted(all_cardinality_stats[mcu_type].keys()):
+                stats = all_cardinality_stats[mcu_type][field]
+                dup_count = len(stats["files_with_duplicates"])
+                lines.append(
+                    f"| `{mcu_type}` | `{field}` | {stats['max_count']} | {dup_count} file(s) |"
+                )
+
+        lines += ["", "### Provenance Details", ""]
+        for mcu_type in sorted(all_cardinality_stats.keys()):
+            for field in sorted(all_cardinality_stats[mcu_type].keys()):
+                stats = all_cardinality_stats[mcu_type][field]
+                lines += [
+                    f"**`{mcu_type}.{field}`** — max {stats['max_count']} occurrence(s) per instance",
+                    "",
+                ]
+                for path in stats["files_with_duplicates"]:
+                    lines.append(f"- `{path}`")
+                lines.append("")
+
     lines += [
         "---",
         "",
@@ -487,23 +611,27 @@ def write_anomaly_log(anomalies: list[dict], output_path: Path, consumed_files: 
 # Catalog assembly
 # ===========================================================================
 
-def build_catalog(instances_by_type: dict) -> tuple[dict, dict]:
+def build_catalog(instances_by_type: dict) -> tuple[dict, dict, dict]:
     """
     WHAT:    Assembles the full catalog dict from raw corpus instances.
-             Returns the catalog and per-type field stats (for anomaly logging).
+             Returns the catalog, per-type field stats (for anomaly logging),
+             and per-type cardinality stats (for D-23 anomaly log section).
     WHY:     Single entry point for the full transformation pipeline: required/
              optional split → type resolution → child block mapping → FMEA
-             overlay. Keeping this as one function makes the sequence auditable.
+             overlay → multi-field detection (D-23). Keeping this as one
+             function makes the sequence auditable.
     ARGS:
         instances_by_type (dict): Output of collect_mcu_instances().
     RETURNS:
-        tuple: (catalog, all_field_stats)
+        tuple: (catalog, all_field_stats, all_cardinality_stats)
                catalog: dict[str, dict] — the catalog keyed by MCU type name
                all_field_stats: dict[str, dict] — per-type field stats for anomaly log
+               all_cardinality_stats: dict[str, dict] — per-type cardinality stats (D-23)
     FMEA:    EL-001, EL-002, EL-003, SM-003 (applied in FMEA overlay step)
     """
     catalog: dict[str, dict] = {}
     all_field_stats: dict[str, dict] = {}
+    all_cardinality_stats: dict[str, dict] = {}
 
     for mcu_type in sorted(instances_by_type.keys()):
         instances = instances_by_type[mcu_type]
@@ -524,16 +652,24 @@ def build_catalog(instances_by_type: dict) -> tuple[dict, dict]:
         # Constraint strings are descriptive only — no enforcement predicates.
         constraints = FMEA_OVERLAYS.get(mcu_type, [])
 
+        # --- PHASE 5b: MULTI-FIELD DETECTION (D-23) ---
+        # Detect fields where max occurrences > 1 in any single instance.
+        # Export only the boolean list to the catalog; raw counts go to anomaly log.
+        multi_fields, cardinality_stats = compute_multi_fields(instances)
+        if cardinality_stats:
+            all_cardinality_stats[mcu_type] = cardinality_stats
+
         catalog[mcu_type] = {
             "type": mcu_type,
             "required_fields": sorted(required),
             "optional_fields": sorted(optional),
             "field_types": dict(sorted(field_types.items())),
             "child_blocks": dict(sorted(child_blocks.items())),
+            "multi_fields": multi_fields,
             "constraints": constraints,
         }
 
-    return catalog, all_field_stats
+    return catalog, all_field_stats, all_cardinality_stats
 
 
 # ===========================================================================
@@ -646,16 +782,18 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Phase 2–5 — Build catalog
     # ------------------------------------------------------------------
-    print("\n[2/5] Building catalog (required/optional split, type resolution, child blocks, FMEA overlay)...")
-    catalog, all_field_stats = build_catalog(instances_by_type)
+    print("\n[2/5] Building catalog (required/optional split, type resolution, child blocks, FMEA overlay, multi_fields)...")
+    catalog, all_field_stats, all_cardinality_stats = build_catalog(instances_by_type)
     print(f"  Catalog entries: {len(catalog)}")
+    total_multi = sum(len(e.get("multi_fields", [])) for e in catalog.values())
+    print(f"  Multi-field keys detected (D-23): {total_multi} across all types")
 
     # ------------------------------------------------------------------
     # Phase 2 (cont.) — Write anomaly log
     # ------------------------------------------------------------------
     print(f"\n[3/5] Writing anomaly log: {ANOMALY_LOG_PATH}")
     anomalies = build_anomaly_log(all_field_stats)
-    write_anomaly_log(anomalies, ANOMALY_LOG_PATH, consumed_files)
+    write_anomaly_log(anomalies, ANOMALY_LOG_PATH, consumed_files, all_cardinality_stats)
     if anomalies:
         print(f"  [WARN] {len(anomalies)} anomaly record(s) written — human review required.")
         print(f"         See: {ANOMALY_LOG_PATH}")

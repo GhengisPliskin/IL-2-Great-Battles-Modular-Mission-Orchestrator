@@ -22,6 +22,7 @@
         "optional_fields",
         "field_types",
         "child_blocks",
+        "multi_fields",
         "constraints"
       ],
       "additionalProperties": false,
@@ -70,6 +71,15 @@
               "description": "Total number of times this child block type was observed across all corpus instances of the parent MCU type."
             }
           }
+        },
+        "multi_fields": {
+          "type": "array",
+          "description": "Field names that appear more than once in at least one corpus instance (duplicate keys, per parser D-05). Exported as a structural boolean list only — 'this field can be duplicated'. Raw max counts are corpus artifacts and are NOT stored here; they go to logs/Corpus_Anomalies.md (D-23).",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
         },
         "constraints": {
           "type": "array",
