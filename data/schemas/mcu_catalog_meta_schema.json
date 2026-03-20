@@ -1,0 +1,98 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "mcu_catalog_meta_schema_v1.0",
+  "title": "MCU Catalog Meta-Schema",
+  "description": "Validates the structure of data/mcu_catalog.json. Each top-level key is an MCU type name (e.g. 'MCU_Timer'). Each value is a catalog entry describing that type's required/optional fields, value types, child blocks, and FMEA constraints. Produced by Phase 0.4; consumed by PI-001 validator and the Module Reverse Engineer.",
+  "type": "object",
+  "additionalProperties": false,
+  "patternProperties": {
+    "^MCU_[A-Za-z_]+$": {
+      "$ref": "#/definitions/catalog_entry"
+    }
+  },
+  "minProperties": 1,
+  "definitions": {
+    "catalog_entry": {
+      "type": "object",
+      "title": "CatalogEntry",
+      "description": "Schema definition for a single MCU type.",
+      "required": [
+        "type",
+        "required_fields",
+        "optional_fields",
+        "field_types",
+        "child_blocks",
+        "constraints"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The MCU type name, matching the enclosing key.",
+          "pattern": "^MCU_[A-Za-z_]+$"
+        },
+        "required_fields": {
+          "type": "array",
+          "description": "Field names that must be present in every instance of this MCU type (present in 100% of corpus instances).",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "optional_fields": {
+          "type": "array",
+          "description": "Field names that may appear in some but not all instances of this MCU type (present in <100% of corpus instances).",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "field_types": {
+          "type": "object",
+          "description": "Maps each field name to its expected Python type string. Lists are resolved to typed variants (list[int], list[float], list[str]) where corpus data permits.",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_]*$": {
+              "$ref": "#/definitions/field_type_value"
+            }
+          }
+        },
+        "child_blocks": {
+          "type": "object",
+          "description": "Shallow mapping of child block type names to their total occurrence count across all corpus instances of this MCU type. Populated by build_mcu_catalog.py. Full recursive child block schemas are Phase 1 scope (D-19).",
+          "additionalProperties": false,
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_]*$": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Total number of times this child block type was observed across all corpus instances of the parent MCU type."
+            }
+          }
+        },
+        "constraints": {
+          "type": "array",
+          "description": "FMEA constraint annotation strings. Descriptive only — enforcement logic belongs in compiler primitives, not the catalog (per review triage decision, 2026-03-19).",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "field_type_value": {
+      "type": "string",
+      "description": "Expected Python type for a field. 'list[int]', 'list[float]', 'list[str]' are the resolved typed variants. 'list' is the unresolved fallback for empty-only fields.",
+      "enum": [
+        "int",
+        "float",
+        "str",
+        "list",
+        "list[int]",
+        "list[float]",
+        "list[str]"
+      ]
+    }
+  }
+}

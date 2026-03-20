@@ -236,6 +236,10 @@ This section grounds the AI agent in purpose, not just procedure.]
 > - [ ] [Boolean criterion]
 > - [ ] All referenced documentation updated per Ground Rule 4
 > - [ ] All code decisions written to `working/CODE_DECISIONS_PATCH.md`
+> - [ ] All new `.py` files have module-level docstrings (MODULE / PURPOSE / FMEA / PHASE)
+> - [ ] All new public functions have structured docstrings (WHAT / WHY / ARGS / RETURNS / FMEA)
+> - [ ] All non-trivial new logic blocks have plain-English block comments
+> - [ ] No existing comments removed or truncated (Ground Rule 11 / C-022)
 
 ### Execution Sequence & Two-Phase Commit
 
@@ -372,7 +376,11 @@ Keep it short. Details live in the documents they belong to.
 ```markdown
 # [Project Name]
 
-[One sentence: what the project does. One sentence: why it exists or who it's for.]
+[One paragraph: what problem this solves and what it produces. Written for a reader unfamiliar with the project.]
+
+## Project Status
+
+[Current phase and brief state of completion.]
 
 ## Quick Start
 
@@ -380,14 +388,17 @@ Keep it short. Details live in the documents they belong to.
 
 ## Documentation
 
+This project is developed using AI coding assistants under human oversight. If you are new to the project, read `ARCHITECTURE.md` first.
+
 | Document | Purpose |
 |---|---|
-| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Directory structure, component descriptions, data flow, phase status |
-| [`CONSTRAINTS.md`](CONSTRAINTS.md) | FMEA traceability and technical constraints |
-| [`KEY_DECISION_LOG.md`](KEY_DECISION_LOG.md) | Architectural decisions |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | Directory structure, component descriptions, data flow, phase status, code comment standard |
+| [`CONSTRAINTS.md`](CONSTRAINTS.md) | FMEA traceability, technical constraints, and code quality requirements |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Code comment standard, contribution workflow, ground rules for contributors |
+| [`KEY_DECISION_LOG.md`](KEY_DECISION_LOG.md) | Architectural decisions and rationale |
 | [`CODE_DECISION_LOG.md`](CODE_DECISION_LOG.md) | Code-level decisions and debugging heuristics |
 | [`docs/KANBAN_SETUP.md`](docs/KANBAN_SETUP.md) | Project board configuration |
-| [`docs/FMEA.md`](docs/FMEA.md) | Failure Mode and Effects Analysis register |
+| [`docs/FMEA.md`](docs/FMEA.md) | Failure Mode and Effects Analysis — catalogue of silent failure modes and mitigations |
 | [`docs/[project]-master-plan.md`](docs/[project]-master-plan.md) | Full project plan, ground rules, task registry |
 
 ## Automation
@@ -397,12 +408,13 @@ See [`docs/KANBAN_SETUP.md`](docs/KANBAN_SETUP.md) for setup steps and workflow 
 
 ## Ground Rules
 
-This project enforces 10 operational rules for traceability and safe AI-assisted
-development. See the [Master Plan](docs/[project]-master-plan.md) for full details.
+This project uses AI coding assistants under 11 operational ground rules for
+traceability and safe AI-assisted development. See the
+[Master Plan](docs/[project]-master-plan.md) for full details.
 
 ## Contributing
 
-[Placeholder — populated during Phase 2 execution]
+[Placeholder — populated during Phase 2 execution. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the code comment standard and workflow ground rules.]
 ```
 
 ---

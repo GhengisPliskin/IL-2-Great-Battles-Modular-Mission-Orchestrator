@@ -101,19 +101,28 @@ The Master Project Plan document (`MMO_Master_Project_Plan.docx`) states "37 AI 
 
 ---
 
-## DECISION 6 — Corpus Path in test_parser.py and test_serializer.py
+## DECISION 6 — Code Comment Standard Adopted (Ground Rule 11)
 
-**Status:** RESOLVED — Fix deferred to Phase 0.6
+**Status:** RESOLVED — Standard adopted, constraints registered, all scaffold documents updated
 
-**Resolution:** `test_parser.py` (line 514) and `test_serializer.py` (line 589) both reference `'Group and Mission Examples'` as the local corpus directory — a stale pre-repo folder name. The correct path per `ARCHITECTURE.md` is `tests/fixtures/il2_files/`. The fix is a one-line `os.path.join` update in each file.
+**Resolution:** A binding code comment standard is established for all AI sessions and all code produced in this project. The standard requires four comment types in every `.py` file: a module-level docstring (MODULE / PURPOSE / FMEA / PHASE), a function docstring on every public function (WHAT / WHY / ARGS / RETURNS / FMEA), a plain-English block comment above every non-trivial logic block, and a Why-Not comment wherever a constraint forces a non-obvious implementation choice. Silent removal of existing comments is prohibited in all task types including refactoring, reformatting, and test writing. Comment presence and preservation are standing acceptance criteria on every session prompt header — they do not require individual negotiation per task.
 
-**Rationale:** The corpus directory was renamed when the project was structured into a proper repo. The test files predate that decision and were not updated. Deferring to Phase 0.6 (project scaffolding) where all path wiring is verified end-to-end.
+**Rationale:** AI coding sessions optimize for clean output and will strip or thin comments unless explicitly prohibited. The IL-2 engine has non-obvious runtime behaviors (timer pause semantics, counter non-reset, entity binding races) that must be explained at the point of implementation. A reader — human or AI — arriving in a new session without project history must be able to understand what a block does, why it was written that way, and which engine constraint it is protecting against. Self-documenting code is insufficient for this project's constraint density.
 
-**FMEA Impact:** None directly. However a broken corpus path silently returns an empty fixture set, which would cause corpus-dependent tests (0.2 round-trip, 0.4 catalog coverage) to pass vacuously. Fix must land before Phase 0.2 test suite is run against the corpus.
+**FMEA Impact:** None to existing constraints. Four new code quality constraints registered: C-019 (module docstrings), C-020 (function docstrings), C-021 (block comments), C-022 (comment preservation). These compound with all existing FMEA constraints — any file that implements an FMEA constraint must also satisfy C-019 through C-022.
 
 **Documents updated:**
-- `KEY_DECISION_LOG.md` — this entry
+- `ARCHITECTURE.md` — New "Code Comment Standard" section added with full format specification, four comment type templates, and five preservation rules. Glossary and "What This Architecture Solves" intro paragraphs added. `CLAUDE.md` and `CONTRIBUTING.md` added to root directory structure.
+- `CONSTRAINTS.md` — C-002 updated to reflect GUI framework as pending decision (not locked to PyQt6). New Section 5 added with C-019 through C-022.
+- `CONTRIBUTING.md` — New file created at repo root. Contains full comment standard, contribution workflow for AI and human sessions, and ground rules reference table.
+- `CLAUDE.md` — New file created at repo root. Ground Rule 11 added to ground rules table. Comment standard summary and templates included.
+- `SKILL.md` — Ground Rule 11 added to operational ground rules table. Phase 3 documentation audit step expanded to include comment presence and preservation checks. `CLAUDE.md` and `CONTRIBUTING.md` added to scaffolding file inventory.
+- `docs/templates/GitHub_Project_Planner_Templates.md` — SESSION_PROMPT_HEADER acceptance criteria block updated with four standing comment criteria. README skeleton updated to include `CLAUDE.md` and `CONTRIBUTING.md`, ground rules count corrected to 11.
+- `docs/templates/GitHub_Project_Planner_Master_Plan_Template.md` — NFR-002 row added for code quality. `CLAUDE.md` and `CONTRIBUTING.md` added to directory structure template.
+- `README.md` — "What This Is" and "Project Status" sections added for readers unfamiliar with the project. Documentation table updated with `CONTRIBUTING.md` and improved FMEA description. Ground Rules blurb updated to 11 rules.
 
 **Downstream impact:**
-- Phase 0.6 session must update `_get_corpus_files()` in both test files to reference `tests/fixtures/il2_files/`
-- `.gitignore` already excludes `tests/fixtures/il2_files/` — corpus files must be added manually by the project owner after cloning
+- All future session prompt headers generated from the SESSION_PROMPT_HEADER template will automatically include the four standing comment acceptance criteria.
+- All future projects scaffolded from the GitHub Project Planner skill will generate `CLAUDE.md` and `CONTRIBUTING.md` as standard scaffold files.
+- A compliance audit prompt system has been designed but deferred. Implementation trigger: Phase 0.3 HUMAN gate review reveals comment compliance gaps despite Ground Rule 11 being present. See `working/DEFERRED_compliance_audit_prompt.md` for full design specification.
+- GUI framework decision (C-002) remains open. Formal KEY_DECISION_LOG entry required when framework is confirmed before Phase 2.

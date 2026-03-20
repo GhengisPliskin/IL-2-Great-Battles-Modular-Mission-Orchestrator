@@ -234,3 +234,6 @@ data/map_databases/maps.sqlite3
 
 # Phase 6 distribution output
 build/dist/
+
+# Build-time diagnostic output (regenerated on every build_mcu_catalog.py run)
+logs/

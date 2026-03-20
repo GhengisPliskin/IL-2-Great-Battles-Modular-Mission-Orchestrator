@@ -1,6 +1,6 @@
 # Constraints — IL-2 Great Battles Modular Mission Orchestrator
 
-**Last Updated:** March 18, 2026
+**Last Updated:** March 19, 2026
 **Source Documents:** `ARCHITECTURE.md`, `docs/MMF_Specification_V2.md`, `docs/MMF_FMEA_Report_v2.md`
 
 ---
@@ -10,7 +10,7 @@
 | ID | Constraint | Type | Impact |
 |---|---|---|---|
 | C-001 | Python 3.10+ required | Tech Stack | Minimum runtime version for all components. No language migration planned. |
-| C-002 | PyQt6 for GUI layer | Tech Stack | GUI framework locked to PyQt6. No web-based or Electron alternatives. |
+| C-002 | GUI framework TBD (currently PyQt6; replacement under evaluation) | Tech Stack | Decision required before Phase 2 begins. All GUI-related Tier 2 task assignments are provisional until framework is confirmed. See KEY_DECISION_LOG for tracking. |
 | C-003 | JSON Schema Draft 7 for intermediary format | Tech Stack | The MMF JSON schema contract uses Draft 7. All validation tooling must support this draft. |
 | C-004 | No external database dependency | Infrastructure | All data is file-based (.json, .Group, .Mission). No PostgreSQL, SQLite, or other DB required at runtime. |
 | C-005 | Windows primary target | Platform | IL-2 Sturmovik runs on Windows. PyInstaller distribution targets Windows .exe. |
@@ -82,3 +82,16 @@ All 14 failure modes identified in the FMEA analysis. Full register at `docs/FME
 | EC-002 | MEDIUM | Dependency stubs: reserved ID range 900000-999999 | `src/mmf/compiler/dependency_stubs.py` |
 | EC-003 | HIGH | Spawn prohibited: Activate/Deactivate only for Magazine Array flights | `src/mmf/compiler/magazine_array.py` |
 | EC-004 | HIGH | GC-gated wave activation: no time-based activation without GC confirmation | `src/mmf/compiler/magazine_array.py` |
+
+---
+
+## 5. Code Quality Constraints
+
+| ID | Constraint | Type | Impact |
+|---|---|---|---|
+| C-019 | All `.py` files must have a module-level docstring (MODULE / PURPOSE / FMEA / PHASE) | Code Quality | Enforced at code review. Missing module docstrings are a failing deliverable. |
+| C-020 | All public functions and methods must have a structured docstring (WHAT / WHY / ARGS / RETURNS / FMEA) | Code Quality | Enforced at code review. Functions added by AI sessions without docstrings are a failing deliverable. |
+| C-021 | All non-trivial logic blocks must have a plain-English block comment explaining what the block does and why | Code Quality | AI sessions must not rely on "self-documenting code" as a substitute. Plain prose is required. |
+| C-022 | AI sessions must not remove, truncate, or silently rewrite existing comments during refactoring, reformatting, or test-writing tasks | Code Quality | Comment preservation is a standing acceptance criterion in every session prompt header. Violation is grounds for task rejection. |
+
+**Authoritative standard:** See `ARCHITECTURE.md` — "Code Comment Standard" section for the full format specification, including comment templates and examples.

@@ -70,6 +70,7 @@ alternatives based on training data.
 | ID | Requirement | Category | Threshold |
 |---|---|---|---|
 | NFR-001 | [Description] | [Performance / Security / Accessibility / etc.] | [Measurable target] |
+| NFR-002 | All `.py` files must include module-level docstrings, public function docstrings, and plain-English block comments on all non-trivial logic. AI sessions must not remove or truncate existing comments. | Code Quality | See `ARCHITECTURE.md` — "Code Comment Standard" section for format. Enforced via Ground Rule 11 and CONSTRAINTS.md C-019 through C-022. Zero exceptions. |
 
 ### 3.3 Constraints
 | ID | Constraint | Type | Impact |
@@ -103,6 +104,8 @@ their responsibilities, and how they communicate.]
 ├── .github/
 │   └── workflows/
 │       └── spike-check.yml      # Spike Done-Lock enforcement (Ground Rule 7)
+├── CLAUDE.md                    # Claude Code session briefing — read automatically at every session start
+├── CONTRIBUTING.md              # Code comment standard, contribution workflow, ground rules
 ├── ARCHITECTURE.md
 ├── CONSTRAINTS.md
 ├── KEY_DECISION_LOG.md

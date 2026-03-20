@@ -3,7 +3,31 @@
 **Version:** 2.0 (Post-FMEA)  
 **Target Environment:** IL-2 Sturmovik Great Battles Mission Editor  
 **Language:** Python 3.10+  
-**Last Updated:** Phase 0.2 Complete
+**Last Updated:** March 19, 2026
+
+---
+
+## Glossary
+
+Terms used throughout this document that may be unfamiliar to a new reader.
+
+| Term | Meaning |
+|---|---|
+| **MMF** | Modular Mission Format — the JSON schema that defines how a mission module is specified. The contract between the GUI frontend and the compiler backend. |
+| **MCU** | Mission Control Unit — the IL-2 engine's name for any object that has logic attached (timers, counters, triggers, waypoints, aircraft, entities). Every object in a `.Mission` or `.Group` file is an MCU. |
+| **FMEA** | Failure Mode and Effects Analysis — a systematic catalogue of the ways this project can fail silently (produce a mission file that appears valid but behaves incorrectly at runtime). Each failure mode has a mitigation and a constraint ID (PI-*, EL-*, SM-*, EC-*). See `CONSTRAINTS.md` and `docs/FMEA.md`. |
+| **DServer** | IL-2 Dedicated Server — the multiplayer server process that loads and runs `.Mission` files. The primary runtime target for compiled missions. |
+| **Magazine Array** | The activation pattern used to cycle AI flights during a long session without exceeding the engine's active unit cap. Uses Activate/Deactivate rather than Spawn, controlled by a counter MCU. |
+| **Entity Proxy** | A special MCU (`MCU_TR_Entity`) that binds a logic trigger network to a physical aircraft object. Binding must be delayed 2 seconds after activation or it fails silently. |
+| **GC / Garbage Collection** | The trigger chain that deactivates a destroyed or returned flight and signals the Magazine Array to activate the next wave. Prevents AI unit accumulation over a long session. |
+| **Serialization Timer** | A short timer (50–100ms) placed between trigger signals to guarantee they execute in separate engine ticks. Required because simultaneous triggers execute in undefined order. |
+| **.Group / .Mission** | IL-2 ASCII text file formats. `.Group` contains one reusable module. `.Mission` contains a complete playable mission including all modules, player spawns, and weather. |
+
+---
+
+## What This Architecture Solves
+
+IL-2 mission files are flat ASCII text — every object has a numeric ID, and those IDs must be globally unique within a file. Copying a module from one mission to another collides IDs, breaks trigger links, and causes cascade failures with no error message. The three-layer architecture below exists to make modules genuinely reusable: the compiler generates fresh IDs, places objects in non-overlapping coordinate zones, and verifies binding integrity every time a module is compiled — regardless of what other modules are present.
 
 ---
 
@@ -43,6 +67,8 @@
 il2-mmo/
 ├── conftest.py                  # Pytest configuration (all tests)
 ├── README.md                    # Project overview, setup instructions
+├── CLAUDE.md                    # Claude Code session briefing — read automatically at every session start
+├── CONTRIBUTING.md              # Code comment standard, contribution workflow, ground rules
 ├── ARCHITECTURE.md              # This file
 ├── CONSTRAINTS.md               # FMEA traceability (PI-*, EL-*, SM-*, EC-*)
 ├── KEY_DECISION_LOG.md          # Architectural decision records
@@ -397,6 +423,73 @@ pytest src/mmf/parser/    # Specific directory
 
 ---
 
+## Code Comment Standard
+
+This standard is binding for all AI sessions and all code produced in this project. It is not a style suggestion. Comment preservation is an explicit acceptance criterion in every session prompt header.
+
+### Principle
+
+All code must be navigable by a reader unfamiliar with this codebase. Comments explain **what a block does and why it exists**. Technical accuracy is required; jargon is permitted only when accompanied by a plain-English explanation.
+
+### Comment Types
+
+**1. Module Docstring — every `.py` file**
+
+```python
+"""
+MODULE:  <filename without .py extension>
+PURPOSE: <What this module does, in 1–3 plain sentences. Which layer/component it belongs to.>
+FMEA:    <Constraint IDs this module directly implements, e.g. "EL-001, SM-003". Write "None" if not applicable.>
+PHASE:   <Project phase that introduced this module, e.g. "Phase 1.4".>
+"""
+```
+
+**2. Function/Method Docstring — every public function or method**
+
+```python
+def my_function(arg1, arg2):
+    """
+    WHAT:    <One sentence: what does this function do?>
+    WHY:     <One sentence: why does it exist / what failure does it prevent?>
+    ARGS:
+        arg1 (type): <Description.>
+        arg2 (type): <Description.>
+    RETURNS:
+        type: <Description. Write "None" if void.>
+    FMEA:    <Constraint ID if this function directly enforces one, else "None".>
+    """
+```
+
+**3. Block Comment — every non-trivial logic block**
+
+```python
+# --- WHAT THIS DOES ---
+# <2–4 plain sentences. Describe the operation and its purpose. If an FMEA
+# constraint drives this logic, cite the ID in brackets: [EL-001]>
+```
+
+**4. Why-Not Comment — when a constraint forces a non-obvious choice**
+
+```python
+# WHY NOT <obvious alternative>: [<FMEA-ID>] — <Plain explanation of why the
+# obvious approach fails in the IL-2 engine or violates a project constraint.>
+#
+# Example:
+# WHY NOT MCU_CMD_Spawn: [EC-003] — Spawned wingmen ignore leader Target Link
+# commands. Activate/Deactivate is the only mechanism that preserves formation
+# hierarchy. See CONSTRAINTS.md EC-003.
+```
+
+### Preservation Rules — Binding for All AI Sessions
+
+1. **Preserve existing comments verbatim.** All docstrings and block comments MUST be preserved unless the current task's requirements explicitly replace the underlying logic.
+2. **Refactored functions inherit their comment.** If a function's behavior changes, update its docstring to match — do not delete it.
+3. **New code requires new comments.** Any function or logic block added by an AI session that lacks the required comment type is a failing deliverable.
+4. **Silent removal is prohibited.** An AI session MUST NOT strip or truncate comments to produce "cleaner" output. This applies to reformatting, refactoring, and test-writing tasks equally.
+5. **Comment preservation is a standing acceptance criterion** in every session prompt header. It does not need to be individually negotiated per task.
+
+---
+
 ## For Claude Code / Projects / Cowork
 
 **This file is the reference.** When starting a session:
@@ -454,6 +547,5 @@ Claude will find the directory structure and understand placement immediately.
 
 ---
 
-**Last Updated:** March 18, 2026  
 **Phase Progress:** 0.2 Complete (1/7 phases)  
 **Next Phase:** 0.3 (ASCII Writer), 0.4 (MCU Catalog), 0.5 (JSON Schema), 0.6 (Project Structure)

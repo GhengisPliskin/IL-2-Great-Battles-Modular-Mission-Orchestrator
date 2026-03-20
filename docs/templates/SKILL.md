@@ -69,6 +69,7 @@ Embed them in every Master Plan and reference them in every prompt header.
 | 8 | **Execution-Locked FMEA** | During Phase 2 task execution, the AI must treat provided FMEA rules as strict physical laws of the project. It is prohibited from altering existing constraints, relaxing severity ratings, or hallucinating new constraints ad hoc to simplify implementation. |
 | 9 | **FMEA Amendment Protocol** | If the AI discovers a logical impossibility in an existing constraint, or identifies a new systemic failure mode during execution, it must HALT code generation and propose a formal FMEA update for human review before proceeding. Use the FMEA Amendment template in `docs/templates/templates.md`. |
 | 10 | **Codebase State Synchronization** | When operating outside an AI-native IDE (e.g., Cursor, Windsurf, or similar), the AI MUST ingest a current repository map (e.g., Repomix output, repo-map, or equivalent) at the start of any Phase 2 execution session. Do not begin code generation against a stale mental model of the repository. |
+| 11 | **Code Comment Standard** | All generated code must include module docstrings, function docstrings, and plain-English block comments per the format in `ARCHITECTURE.md` — "Code Comment Standard" section. AI sessions must not remove, truncate, or rewrite existing comments. Comment presence and preservation are standing acceptance criteria — they apply to every task without being individually negotiated. See `CONSTRAINTS.md` C-019 through C-022. |
 
 ---
 
@@ -256,6 +257,8 @@ Generate each of these from the Master Plan.
 | File | Source Section in Master Plan |
 |---|---|
 | `README.md` | Project overview, directory structure, ground rules |
+| `CLAUDE.md` | Ground rules summary, session startup sequence, comment standard summary, two-phase commit instructions — Claude Code reads this automatically at every session start |
+| `CONTRIBUTING.md` | Code comment standard (full format), contribution workflow, ground rules reference |
 | `ARCHITECTURE.md` | Directory structure, component descriptions, data flow |
 | `CONSTRAINTS.md` | Non-functional requirements, tech stack mandates |
 | `docs/FMEA.md` | FMEA register (or empty template if degraded path) |
@@ -328,6 +331,9 @@ When the user is actively developing and returns for support:
 
 6. **Documentation Audit**: At issue close, verify documentation parity — has
    ARCHITECTURE.md been updated? Has `working/CODE_DECISIONS_PATCH.md` been updated?
+   Have all new functions and logic blocks received the required docstrings and
+   block comments per Ground Rule 11? Has comment preservation been confirmed
+   (no existing comments removed or truncated)?
 
 7. **Architecture Patches**: When a decision changes the architecture, generate an
    Architecture Patch (template in `docs/templates/templates.md`) for human review rather
