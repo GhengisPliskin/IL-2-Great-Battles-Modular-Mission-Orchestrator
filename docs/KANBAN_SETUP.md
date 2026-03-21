@@ -50,10 +50,25 @@ See `.github/workflows/spike-check.yml` for the full workflow definition.
 
 ### Labels
 
-- **Component labels:** `comp:parser`, `comp:compiler`, `comp:mre`, `comp:map-extractor`, `comp:orchestrator`, `comp:gui`, `comp:cli`, `comp:schema`
-- **Complexity labels:** `complexity:low`, `complexity:medium`, `complexity:high`
-- **Tier labels:** `tier:1`, `tier:2`, `tier:3`
-- **FMEA labels:** `fmea:PI-001`, `fmea:PI-002`, `fmea:PI-003`, `fmea:PI-004`, `fmea:EL-001`, `fmea:EL-002`, `fmea:EL-003`, `fmea:SM-001`, `fmea:SM-002`, `fmea:SM-003`, `fmea:SM-004`, `fmea:EC-001`, `fmea:EC-002`, `fmea:EC-003`, `fmea:EC-004`
-- **Boundary labels:** `human-only`, `ai-eligible`, `ai-with-review`
-- **Phase labels:** `phase:0`, `phase:1`, `phase:2`, `phase:3`, `phase:4`, `phase:5`, `phase:6`
-- **Spike label:** `spike` for exploratory tasks under Ground Rule 7
+**Phase** — one per issue, required:
+`phase:0`, `phase:1`, `phase:2`, `phase:3`, `phase:4`, `phase:5`, `phase:6`
+
+**Boundary** — one per issue, required:
+`human-gate`, `ai-eligible`, `ai-with-review`
+
+**Type** — one per issue, required:
+`task`, `spike`, `decision`, `amendment`
+
+- `task` — standard execution work (coding, testing, documentation)
+- `spike` — exploratory work under Ground Rule 7 (formalization issue required before Done)
+- `decision` — open architectural question requiring human disposition (e.g., framework selection)
+- `amendment` — modification to the project's rule set (constraints, FMEA, scope proposals)
+
+**Priority** — one per issue, optional (default: `normal`):
+`critical`, `high`, `normal`
+
+- `critical` — blocks multiple other issues or threatens project integrity
+- `high` — blocks at least one other issue or has a near-term deadline
+- `normal` — standard priority, no urgency
+
+**Total labels: 17.** All other label categories previously defined (component, complexity, tier, individual FMEA) are retired. Component, tier, and FMEA constraint information lives in the issue body and session prompt header — not in labels.

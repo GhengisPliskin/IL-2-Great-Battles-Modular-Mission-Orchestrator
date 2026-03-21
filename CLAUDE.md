@@ -3,6 +3,7 @@
 This file is read automatically by Claude Code at the start of every session.
 It is the minimum required orientation for any AI session on this project.
 Do not skip or summarize it.
+This project has two session types — Execution and Housekeeping — described below. Confirm the session type before proceeding.
 
 ---
 
@@ -41,6 +42,32 @@ Every session is bound to a specific GitHub Issue and a session prompt header
 
 Announce the Kanban state change at session start and again at session end
 (Ground Rule 3).
+
+---
+
+---
+
+## Session Types
+
+This project uses two distinct session types. Confirm which type applies before proceeding.
+
+### Execution Session (Default)
+
+For coding, testing, and documentation tasks bound to a GitHub Issue.
+
+Startup: Steps 1–3 above.
+Exit responsibility: If this session changed any project-level fact (constraint text, task count, phase status, framework name, file path, directory structure), log all other documents containing the stale version of that fact to `working/DOCUMENT_DRIFT_LOG.md` before ending the session. Use the entry format defined in that file's header.
+
+### Housekeeping Session
+
+For processing accumulated administrative queues. Triggered by the user — not automatic.
+
+Startup sequence:
+1. Read `working/ISSUE_QUEUE.md`. If entries exist with status other than CREATED, create each issue via `gh issue create` with the specified title, labels, milestone, and body. Record the created issue number on each entry.
+2. Read `working/DOCUMENT_DRIFT_LOG.md`. For each pending entry: open the listed document, verify the stale value is still present, apply the correction, mark the entry as RESOLVED. Skip entries marked ESCALATE.
+3. Stage all changes with a descriptive commit message summarizing actions taken (e.g., "Housekeeping: created issues #12–#17, patched 3 drift entries in Master Plan and CONSTRAINTS.md").
+
+Do not combine housekeeping with execution work. Housekeeping sessions process queues and end. They do not write code, generate prompt headers, or perform task execution.
 
 ---
 
@@ -170,6 +197,8 @@ The FMEA Amendment template is in `docs/templates/templates.md`.
 | Code decisions | `working/CODE_DECISIONS_PATCH.md` |
 | Architecture changes | `ARCHITECTURE_PATCH.md` (propose, do not directly edit) |
 | Compliance findings (if audit run) | `working/COMPLIANCE_LOG.md` |
+| Issue definitions (from planning sessions) | `working/ISSUE_QUEUE.md` |
+| Stale-fact notifications | `working/DOCUMENT_DRIFT_LOG.md` |
 
 Never write directly to `CODE_DECISION_LOG.md`, `KEY_DECISION_LOG.md`, or
 `ARCHITECTURE.md` during active development. These are updated only at HUMAN

@@ -84,7 +84,9 @@ il2-mmo/
 │       └── spike-check.yml      # Spike Done-Lock enforcement (Ground Rule 7)
 │
 └── working/                     # Ephemeral per-session scratch space
-    └── CODE_DECISIONS_PATCH.md  # Provisional decisions — merged into CODE_DECISION_LOG.md at HUMAN gate
+    ├── CODE_DECISIONS_PATCH.md  # Provisional decisions — merged into CODE_DECISION_LOG.md at HUMAN gate
+    ├── ISSUE_QUEUE.md               # Transit queue for GitHub Issue creation (consumed by Housekeeping sessions)
+    └── DOCUMENT_DRIFT_LOG.md        # Stale-fact registry (consumed by Housekeeping sessions)
 ```
 
 ### src/ — Source Code
@@ -241,6 +243,18 @@ docs/
 ├── templates/                   # Skill reference templates (read-only after scaffolding)
 │   ├── templates.md             # All document templates
 │   └── master-plan-template.md  # Master Project Plan template
+│
+├── proposals/                   # Scope change proposals and their dispositions
+│   └── SCP-001_Post_V1_Scope_Expansions.md
+│
+├── prompts/                     # Session prompt headers for all phases (Phase 0–6)
+│   ├── Phase0_Session_Prompt_Headers.md
+│   ├── Phase1_Session_Prompt_Headers.md
+│   ├── Phase2_Session_Prompt_Headers.md
+│   ├── Phase3_Session_Prompt_Headers.md
+│   ├── Phase4_Session_Prompt_Headers.md
+│   ├── Phase5_Session_Prompt_Headers.md
+│   └── Phase6_Session_Prompt_Headers.md
 │
 └── ARCHITECTURE/                # Architecture diagrams
     ├── three_layer_architecture.drawio

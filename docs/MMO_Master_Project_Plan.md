@@ -107,7 +107,7 @@ Tasks flagged HUMAN require action from the project owner (file collection, in-g
 | ID | Constraint | Type | Impact |
 |---|---|---|---|
 | C-001 | Python 3.10+ | Tech Stack | Minimum runtime version for all components |
-| C-002 | PyQt6 for GUI | Tech Stack | Framework locked; no web/Electron alternatives |
+| C-002 | GUI framework TBD (currently PyQt6; replacement under evaluation) | Tech Stack | Decision required before Phase 2 begins |
 | C-003 | JSON Schema Draft 7 | Tech Stack | Intermediary format validation standard |
 | C-004 | IL-2 ASCII format undocumented | Format | Parser must handle syntax empirically; zero official spec |
 | C-005 | DServer multiplayer environment | Runtime | Output must run on dedicated server |
@@ -467,6 +467,9 @@ These rules are non-negotiable for all contributors (human and AI).
 | `docs/IL-2_Sturmovik_Mission_Editor_Manual.pdf` | Reference | IL-2 Mission Editor manual — gitignored, excluded from Repomix |
 | `docs/templates/templates.md` | Reference | All document templates — read before generating any project file (Ground Rule 6) |
 | `docs/templates/master-plan-template.md` | Reference | Master Project Plan template — read before generating Phase 0 output (Ground Rule 6) |
+| `docs/proposals/SCP-001_Post_V1_Scope_Expansions.md` | Generated | SCP-001 planning session |
+| `working/ISSUE_QUEUE.md` | Generated | Housekeeping infrastructure |
+| `working/DOCUMENT_DRIFT_LOG.md` | Generated | Housekeeping infrastructure |
 
 ### Conditional Documents
 
